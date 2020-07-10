@@ -13,7 +13,7 @@ class SimpleSchedulerDecoder {
       SimpleSchedulerDecoder(int tasksAmount,
                              int processorsAmount,
                              std::vector< std::vector<int> > processingTimeVector,
-                             std::vector<int> costPerUnitOfProcessingTimeVector);
+                             std::vector<int> costPerUnitOfTimeVector);
 
       // Destructor.
       ~SimpleSchedulerDecoder();
@@ -36,11 +36,11 @@ class SimpleSchedulerDecoder {
       // Print processing time vector.
       void printProcessingTimeVector() const;
 
-      // Get cost per unit of processing time vector.
-      std::vector<int> getCostPerUnitOfProcessingTimeVector() const;
+      // Get cost per unit of time vector.
+      std::vector<int> getCostPerUnitOfTimeVector() const;
 
-      // Print cost per unit of processing time vector.
-      void printCostPerUnitOfProcessingTimeVector() const;
+      // Print cost per unit of time vector.
+      void printCostPerUnitOfTimeVector() const;
 
    private:
 
@@ -53,8 +53,8 @@ class SimpleSchedulerDecoder {
       // Processing time vector.
       std::vector< std::vector<int> > processingTimeVector;
 
-      // Cost per unit of processing time vector.
-      std::vector<int> costPerUnitOfProcessingTimeVector;
+      // Cost per unit of time vector.
+      std::vector<int> costPerUnitOfTimeVector;
 
 };
 

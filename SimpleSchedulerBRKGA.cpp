@@ -77,6 +77,8 @@ int main() {
    // Creation of processingTimeVector.
    std::vector< std::vector<int> > processingTimeVector;
 
+   // Creation of costPerUnitOfTimeVector.
+   std::vector<int> costPerUnitOfTimeVector;
 
    // Loading BRKGA and Scheduler parameters:
 
@@ -149,47 +151,52 @@ int main() {
       memset(parameterName, '\0', sizeof(parameterName));
       memcpy(parameterName, lineContent + matchLine[1].rm_so, (matchLine[1].rm_eo - matchLine[1].rm_so));
 
-      if (strcmp(parameterName, "PROCESSING_TIME_VECTOR_N_x_M") == 0) {
-
-         // Setting size of processingTimeVector.
-         processingTimeVector.resize(N_TASKS, std::vector<int>(M_PROCESSORS, initializationValue));
-
-         // Converting char array to string.
-         std::string text(parameterValue);
-
-         // Splitting by vector's line.
-         std::vector<std::string> vectorLines = split(text, '|');
-
-         // N Loop...
-         for (unsigned int indexN = 0; indexN < vectorLines.size(); indexN++) {
-
-            // Removing matrix garbage.
-            replaceAll(vectorLines[indexN], "{", "");
-            replaceAll(vectorLines[indexN], " ", "");
-            replaceAll(vectorLines[indexN], "}", "");
-
-            //printf("vectorLines[%d] = %s\n", indexN, vectorLines[indexN].c_str());
-
-            // Splitting by vector's column.
-            std::vector<std::string> vectorLineValues = split(vectorLines[indexN], ',');
-
-            // M Loop...
-            for (unsigned int indexM = 0; indexM < vectorLineValues.size(); indexM++) {
-               //printf("INDEX_N_M (%d_%d): %s\n", indexN, indexM, vectorLineValues[indexM].c_str());
-
-               // Filling processingTimeVector (line N, column M).
-               processingTimeVector[indexN][indexM] = atoi(vectorLineValues[indexM].c_str());
-
-            }
-
-         }
-
-      } else if (strcmp(parameterName, "N_TASKS") == 0) {
+      if (strcmp(parameterName, "N_TASKS") == 0) {
          // Setting N_TASKS' value.
          N_TASKS = atoi(parameterValue);
       } else if (strcmp(parameterName, "M_PROCESSORS") == 0) {
          // Setting M_PROCESSORS' value.
          M_PROCESSORS = atoi(parameterValue);
+      } else if (strcmp(parameterName, "PROCESSING_TIME_VECTOR_N_x_M") == 0) {
+         // Setting size of processingTimeVector.
+         processingTimeVector.resize(N_TASKS, std::vector<int>(M_PROCESSORS, initializationValue));
+         // Converting char array to string.
+         std::string text(parameterValue);
+         // Splitting by vector's line.
+         std::vector<std::string> vectorLines = split(text, '|');
+         // N Loop...
+         for (unsigned int indexN = 0; indexN < vectorLines.size(); indexN++) {
+            // Removing matrix garbage.
+            replaceAll(vectorLines[indexN], "{", "");
+            replaceAll(vectorLines[indexN], " ", "");
+            replaceAll(vectorLines[indexN], "}", "");
+            //printf("vectorLines[%d] = %s\n", indexN, vectorLines[indexN].c_str());
+            // Splitting by vector's column.
+            std::vector<std::string> vectorLineValues = split(vectorLines[indexN], ',');
+            // M Loop...
+            for (unsigned int indexM = 0; indexM < vectorLineValues.size(); indexM++) {
+               //printf("INDEX_N_M (%d_%d): %s\n", indexN, indexM, vectorLineValues[indexM].c_str());
+               // Filling processingTimeVector (line N, column M).
+               processingTimeVector[indexN][indexM] = atoi(vectorLineValues[indexM].c_str());
+            }
+         }
+      } else if (strcmp(parameterName, "COST_PER_UNIT_OF_TIME_VECTOR_M") == 0) {
+         // Setting size of costPerUnitOfTimeVector.
+         costPerUnitOfTimeVector.resize(M_PROCESSORS, initializationValue);
+         // Converting char array to string.
+         std::string text(parameterValue);
+         // Splitting by vector's line.
+         std::vector<std::string> vectorLines = split(text, '|');
+         // M Loop...
+         for (unsigned int indexM = 0; indexM < vectorLines.size(); indexM++) {
+            // Removing matrix garbage.
+            replaceAll(vectorLines[indexM], "{", "");
+            replaceAll(vectorLines[indexM], " ", "");
+            replaceAll(vectorLines[indexM], "}", "");
+            //printf("vectorLines[%d] = %s\n", indexM, vectorLines[indexM].c_str());
+            // Filling costPerUnitOfTimeVector (column).
+            costPerUnitOfTimeVector[indexM] = atoi(vectorLines[indexM].c_str());
+         }
       } else if (strcmp(parameterName, "P") == 0) {
          // Setting P's value.
          P = atoi(parameterValue);
@@ -230,24 +237,14 @@ int main() {
    // Setting N's value (size of chromosome).
    N = N_TASKS * M_PROCESSORS;
 
-   // Creation of costPerUnitOfProcessingTimeVector.
-   std::vector<int> costPerUnitOfProcessingTimeVector;
-
-   // Setting size of costPerUnitOfProcessingTimeVector.
-   costPerUnitOfProcessingTimeVector.resize(M_PROCESSORS, initializationValue);
-
-   // Filling costPerUnitOfProcessingTimeVector (column).
-   costPerUnitOfProcessingTimeVector[0] = 8;
-   costPerUnitOfProcessingTimeVector[1] = 12;
-
    // Initialize the SimpleSchedulerDecoder.
-   SimpleSchedulerDecoder simpleSchedulerDecoder(N_TASKS, M_PROCESSORS, processingTimeVector, costPerUnitOfProcessingTimeVector);
+   SimpleSchedulerDecoder simpleSchedulerDecoder(N_TASKS, M_PROCESSORS, processingTimeVector, costPerUnitOfTimeVector);
 
    // Printing processingTimeVector.
    simpleSchedulerDecoder.printProcessingTimeVector();
 
-   // Printing costPerUnitOfProcessingTimeVector.
-   simpleSchedulerDecoder.printCostPerUnitOfProcessingTimeVector();
+   // Printing costPerUnitOfTimeVector.
+   simpleSchedulerDecoder.printCostPerUnitOfTimeVector();
 
    // Seed to the random number generator.
    const long unsigned RNG_SEED = 0;
@@ -261,7 +258,7 @@ int main() {
    // Current generation.
    unsigned generation = 0;
 
-   printf("Running for %d generations...\n\n", MAX_GENS);
+   printf("\nRunning for %d generations...\n\n", MAX_GENS);
 
    while (generation < MAX_GENS) {
       // Evolve the population for one generation.

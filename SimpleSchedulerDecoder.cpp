@@ -6,11 +6,11 @@
 SimpleSchedulerDecoder::SimpleSchedulerDecoder(int tasksAmount,
                                                int processorsAmount,
                                                std::vector< std::vector<int> > processingTimeVector,
-                                               std::vector<int> costPerUnitOfProcessingTimeVector)
+                                               std::vector<int> costPerUnitOfTimeVector)
                                                : tasksAmount(tasksAmount),
                                                  processorsAmount(processorsAmount),
                                                  processingTimeVector(processingTimeVector),
-                                                 costPerUnitOfProcessingTimeVector(costPerUnitOfProcessingTimeVector) {
+                                                 costPerUnitOfTimeVector(costPerUnitOfTimeVector) {
 }
 
 SimpleSchedulerDecoder::~SimpleSchedulerDecoder() {
@@ -80,18 +80,16 @@ void SimpleSchedulerDecoder::printProcessingTimeVector() const {
       }
       printf("\n");
    }
-   printf("\n");
 }
 
-std::vector<int> SimpleSchedulerDecoder::getCostPerUnitOfProcessingTimeVector() const {
-   return costPerUnitOfProcessingTimeVector;
+std::vector<int> SimpleSchedulerDecoder::getCostPerUnitOfTimeVector() const {
+   return costPerUnitOfTimeVector;
 }
 
-void SimpleSchedulerDecoder::printCostPerUnitOfProcessingTimeVector() const {
-   for (unsigned int m = 0; m < getCostPerUnitOfProcessingTimeVector().size(); m++) { // printf("COLUNA %d.\n", m);
+void SimpleSchedulerDecoder::printCostPerUnitOfTimeVector() const {
+   for (unsigned int m = 0; m < getCostPerUnitOfTimeVector().size(); m++) { // printf("COLUNA %d.\n", m);
       // Custo monetário de processamento por unidade de tempo na máquina m [0, ..., processorCount]:
-      //printf("costPerUnitOfProcessingTimeVector[%d] = %d.\n", m, getCostPerUnitOfProcessingTimeVector()[m]);
-      printf("A máquina m%d custa %d unidade(s) monetária(s) por unidade de tempo de processamento.\n", (m + 1), getCostPerUnitOfProcessingTimeVector()[m]);
+      //printf("costPerUnitOfTimeVector[%d] = %d.\n", m, getCostPerUnitOfProcessingTimeVector()[m]);
+      printf("A máquina m%d custa %d unidade(s) monetária(s) por unidade de tempo de processamento.\n", (m + 1), getCostPerUnitOfTimeVector()[m]);
    }
-   printf("\n");
 }
