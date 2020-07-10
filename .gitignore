@@ -1,0 +1,6 @@
+################################
+# Ignore Compiled Source Files #
+################################
+*.o
+Makefile
+SimpleSchedulerBRKGA
