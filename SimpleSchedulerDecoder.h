@@ -65,6 +65,9 @@ class SimpleSchedulerDecoder {
       // Set processors' random-key interval.
       std::vector<std::vector<double> > setProcessorsRandomKeyInterval() const;
 
+      // Find processor id by random-key interval.
+      int findProcessorIDByRandomKeyInterval(double randomKey) const;
+
 };
 
 #endif

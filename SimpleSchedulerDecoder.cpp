@@ -14,7 +14,7 @@ SimpleSchedulerDecoder::SimpleSchedulerDecoder(int tasksAmount,
                                                  processingTimesVector(processingTimesVector),
                                                  costPerUnitOfTimeVector(costPerUnitOfTimeVector),
                                                  processorsRandomKeyIntervalVector() {
-   // 
+   // Setting processors' random-key interval.
    processorsRandomKeyIntervalVector = SimpleSchedulerDecoder::setProcessorsRandomKeyInterval();
 }
 
@@ -41,9 +41,10 @@ double SimpleSchedulerDecoder::decode(const std::vector<double> &chromosome) con
    // Sorting by task random-key value (ascending order).
    std::sort(TaskID_TaskRK_ProcessorRK_Vector.begin(), TaskID_TaskRK_ProcessorRK_Vector.end(), compare);
 
-//   for (int i = 0; i < getTasksAmount(); i++) {
-//      printf("TaskID_TaskRK_ProcessorRK_Vector[%d] = {%d, %f, %f}.\n", i, std::get<0>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<1>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<2>(TaskID_TaskRK_ProcessorRK_Vector[i]));
-//   }
+   for (int i = 0; i < getTasksAmount(); i++) {
+      //printf("TaskID_TaskRK_ProcessorRK_Vector[%d] = {%d, %f, %f}.\n", i, std::get<0>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<1>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<2>(TaskID_TaskRK_ProcessorRK_Vector[i]));
+      //printf("TaskID_TaskRK_ProcessorRK_Vector[%d] = {%d, %f, %f, %d}.\n", i, std::get<0>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<1>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<2>(TaskID_TaskRK_ProcessorRK_Vector[i]), findProcessorIDByRandomKeyInterval(std::get<2>(TaskID_TaskRK_ProcessorRK_Vector[i])));
+   }
 
    // Return fitnessValue.
    return fitnessValue;
@@ -110,4 +111,15 @@ std::vector<std::vector<double> > SimpleSchedulerDecoder::setProcessorsRandomKey
       //printf("processorsRandomKeyIntervalVector[%d][1] = %f.\n", indexM, processorsRandomKeyIntervalVector[indexM][1]);
    }
    return processorsRandomKeyIntervalVector;
+}
+
+int SimpleSchedulerDecoder::findProcessorIDByRandomKeyInterval(double randomKey) const {
+   int processorID = -1;
+   for (int indexM = 0; indexM < getProcessorsAmount(); indexM++) {
+      if (randomKey >= getProcessorsRandomKeyIntervalVector()[indexM][0] && randomKey < getProcessorsRandomKeyIntervalVector()[indexM][1]) {
+         processorID = indexM;
+         break;
+      }
+   }
+   return processorID;
 }
