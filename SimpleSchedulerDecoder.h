@@ -12,7 +12,7 @@ class SimpleSchedulerDecoder {
       // Constructor.
       SimpleSchedulerDecoder(int tasksAmount,
                              int processorsAmount,
-                             std::vector< std::vector<int> > processingTimeVector,
+                             std::vector<std::vector<int> > processingTimesVector,
                              std::vector<int> costPerUnitOfTimeVector);
 
       // Destructor.
@@ -30,16 +30,16 @@ class SimpleSchedulerDecoder {
       // Get processors amount.
       int getProcessorsAmount() const;
 
-      // Get processing time vector.
-      std::vector< std::vector<int> > getProcessingTimeVector() const;
+      // Get processing times' vector.
+      std::vector<std::vector<int> > getProcessingTimesVector() const;
 
-      // Print processing time vector.
-      void printProcessingTimeVector() const;
+      // Print processing times' vector.
+      void printProcessingTimesVector() const;
 
-      // Get cost per unit of time vector.
+      // Get cost per unit of time's vector.
       std::vector<int> getCostPerUnitOfTimeVector() const;
 
-      // Print cost per unit of time vector.
+      // Print cost per unit of time's vector.
       void printCostPerUnitOfTimeVector() const;
 
    private:
@@ -50,11 +50,20 @@ class SimpleSchedulerDecoder {
       // Processors amount.
       int processorsAmount;
 
-      // Processing time vector.
-      std::vector< std::vector<int> > processingTimeVector;
+      // Processing times' vector.
+      std::vector<std::vector<int> > processingTimesVector;
 
-      // Cost per unit of time vector.
+      // Cost per unit of time's vector.
       std::vector<int> costPerUnitOfTimeVector;
+
+      // Processors random-key interval's vector.
+      std::vector<std::vector<double> > processorsRandomKeyIntervalVector;
+
+      // Get processors random-key interval's vector.
+      std::vector<std::vector<double> > getProcessorsRandomKeyIntervalVector() const;
+
+      // Set processors' random-key interval.
+      std::vector<std::vector<double> > setProcessorsRandomKeyInterval() const;
 
 };
 

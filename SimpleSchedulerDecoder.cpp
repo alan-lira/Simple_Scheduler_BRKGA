@@ -1,54 +1,52 @@
 #include <iostream>
 #include <stdio.h>
+#include<tuple>
+#include<vector>
 
 #include "SimpleSchedulerDecoder.h"
 
 SimpleSchedulerDecoder::SimpleSchedulerDecoder(int tasksAmount,
                                                int processorsAmount,
-                                               std::vector< std::vector<int> > processingTimeVector,
+                                               std::vector<std::vector<int> > processingTimesVector,
                                                std::vector<int> costPerUnitOfTimeVector)
                                                : tasksAmount(tasksAmount),
                                                  processorsAmount(processorsAmount),
-                                                 processingTimeVector(processingTimeVector),
-                                                 costPerUnitOfTimeVector(costPerUnitOfTimeVector) {
+                                                 processingTimesVector(processingTimesVector),
+                                                 costPerUnitOfTimeVector(costPerUnitOfTimeVector),
+                                                 processorsRandomKeyIntervalVector() {
+   // 
+   processorsRandomKeyIntervalVector = SimpleSchedulerDecoder::setProcessorsRandomKeyInterval();
 }
 
 SimpleSchedulerDecoder::~SimpleSchedulerDecoder() {
 
 }
 
+bool compare(const std::tuple<int, double, double> &i, const std::tuple<int, double, double> &j) {
+   return std::get<1>(i) < std::get<1>(j);
+}
+
 double SimpleSchedulerDecoder::decode(const std::vector<double> &chromosome) const {
 
-   double myFitness = 0.0;
+   // Initialize fitnessValue.
+   double fitnessValue = 0.0;
 
-   typedef std::pair<double, unsigned> ValueKeyPair;
+   std::vector<std::tuple<int, double, double> > TaskID_TaskRK_ProcessorRK_Vector(getTasksAmount());
 
-   std::vector<ValueKeyPair> rank(chromosome.size());
-
-   for (unsigned i = 0; i < chromosome.size(); i++) {
-/*
-      std::cout
-         <<"VALOR DE chromosome[" <<i <<"]:" <<chromosome[i]
-         <<
-      std::endl;
-*/
-      rank[i] = ValueKeyPair(chromosome[i], i);
-      myFitness += (double(i + 1) * chromosome[i]);
+   for (int i = 0; i < getTasksAmount(); i++) {
+      TaskID_TaskRK_ProcessorRK_Vector[i] = std::make_tuple(i, chromosome[i], chromosome[i + getTasksAmount()]);
+      //printf("TaskID_TaskRK_ProcessorRK_Vector[%d] = {%d, %f, %f}.\n", i, std::get<0>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<1>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<2>(TaskID_TaskRK_ProcessorRK_Vector[i]));
    }
 
-   // Here we sort 'permutation', which will then produce a permutation of [n]
-   // stored in ValueKeyPair::second:
-   std::sort(rank.begin(), rank.end());
+   // Sorting by task random-key value (ascending order).
+   std::sort(TaskID_TaskRK_ProcessorRK_Vector.begin(), TaskID_TaskRK_ProcessorRK_Vector.end(), compare);
 
-   // permutation[i].second is in {0, ..., n - 1}; a permutation can be obtained as follows
-   std::list<unsigned> permutation;
+//   for (int i = 0; i < getTasksAmount(); i++) {
+//      printf("TaskID_TaskRK_ProcessorRK_Vector[%d] = {%d, %f, %f}.\n", i, std::get<0>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<1>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<2>(TaskID_TaskRK_ProcessorRK_Vector[i]));
+//   }
 
-   for (std::vector<ValueKeyPair>::const_iterator i = rank.begin(); i != rank.end(); i++) {
-      permutation.push_back(i->second);
-   }
-
-   // Return the fitness:
-   return myFitness;
+   // Return fitnessValue.
+   return fitnessValue;
 }
 
 void SimpleSchedulerDecoder::printTaskSchedulingPlan(const std::vector<double> &candidate) const {
@@ -67,16 +65,16 @@ int SimpleSchedulerDecoder::getProcessorsAmount() const {
    return processorsAmount;
 }
 
-std::vector< std::vector<int> > SimpleSchedulerDecoder::getProcessingTimeVector() const {
-   return processingTimeVector;
+std::vector<std::vector<int> > SimpleSchedulerDecoder::getProcessingTimesVector() const {
+   return processingTimesVector;
 }
 
-void SimpleSchedulerDecoder::printProcessingTimeVector() const {
-   for (unsigned int n = 0; n < getProcessingTimeVector().size(); n++) { // printf("LINHA %d.\n", n);
-      for (unsigned int m = 0; m < getProcessingTimeVector()[n].size(); m++) { // printf("COLUNA %d.\n", m);
+void SimpleSchedulerDecoder::printProcessingTimesVector() const {
+   for (unsigned int n = 0; n < getProcessingTimesVector().size(); n++) { // printf("LINHA %d.\n", n);
+      for (unsigned int m = 0; m < getProcessingTimesVector()[n].size(); m++) { // printf("COLUNA %d.\n", m);
          // Tempos de processamento das tarefas n [0, ..., tasksCount] nas máquinas m [0, ..., processorCount].
-         //printf("processingTimeVector[%d][%d] = %d.\n", n, m, getProcessingTimeVector()[n][m]);
-         printf("A tarefa n%d é processada na máquina m%d em %d unidade(s) de tempo.\n", (n + 1), (m + 1), getProcessingTimeVector()[n][m]);
+         //printf("processingTimesVector[%d][%d] = %d.\n", n, m, getProcessingTimesVector()[n][m]);
+         printf("A tarefa n%d é processada na máquina m%d em %d unidade(s) de tempo.\n", (n + 1), (m + 1), getProcessingTimesVector()[n][m]);
       }
       printf("\n");
    }
@@ -92,4 +90,24 @@ void SimpleSchedulerDecoder::printCostPerUnitOfTimeVector() const {
       //printf("costPerUnitOfTimeVector[%d] = %d.\n", m, getCostPerUnitOfProcessingTimeVector()[m]);
       printf("A máquina m%d custa %d unidade(s) monetária(s) por unidade de tempo de processamento.\n", (m + 1), getCostPerUnitOfTimeVector()[m]);
    }
+}
+
+std::vector<std::vector<double> > SimpleSchedulerDecoder::getProcessorsRandomKeyIntervalVector() const {
+   return processorsRandomKeyIntervalVector;
+}
+
+std::vector<std::vector<double> > SimpleSchedulerDecoder::setProcessorsRandomKeyInterval() const {
+   // Calculating random-key interval for each processor.
+   const int intervalValues = 2;
+   const double a = 0.0, b = 1.0;
+   std::vector< std::vector<double> > processorsRandomKeyIntervalVector;
+   processorsRandomKeyIntervalVector.resize(getProcessorsAmount(), std::vector<double>(intervalValues, 0));
+   // M Loop...
+   for (int indexM = 0; indexM < getProcessorsAmount(); indexM++) {
+      processorsRandomKeyIntervalVector[indexM][0] = a + (indexM * (b / getProcessorsAmount()));
+      processorsRandomKeyIntervalVector[indexM][1] = a + ((indexM + 1) * (b / getProcessorsAmount()));
+      //printf("processorsRandomKeyIntervalVector[%d][0] = %f.\n", indexM, processorsRandomKeyIntervalVector[indexM][0]);
+      //printf("processorsRandomKeyIntervalVector[%d][1] = %f.\n", indexM, processorsRandomKeyIntervalVector[indexM][1]);
+   }
+   return processorsRandomKeyIntervalVector;
 }

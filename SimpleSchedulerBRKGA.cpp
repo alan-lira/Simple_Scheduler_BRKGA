@@ -74,8 +74,8 @@ int main() {
    // Initialization value for vectors.
    int initializationValue = 0;
 
-   // Creation of processingTimeVector.
-   std::vector< std::vector<int> > processingTimeVector;
+   // Creation of processingTimesVector.
+   std::vector< std::vector<int> > processingTimesVector;
 
    // Creation of costPerUnitOfTimeVector.
    std::vector<int> costPerUnitOfTimeVector;
@@ -158,8 +158,8 @@ int main() {
          // Setting M_PROCESSORS' value.
          M_PROCESSORS = atoi(parameterValue);
       } else if (strcmp(parameterName, "PROCESSING_TIME_VECTOR_N_x_M") == 0) {
-         // Setting size of processingTimeVector.
-         processingTimeVector.resize(N_TASKS, std::vector<int>(M_PROCESSORS, initializationValue));
+         // Setting size of processingTimesVector.
+         processingTimesVector.resize(N_TASKS, std::vector<int>(M_PROCESSORS, initializationValue));
          // Converting char array to string.
          std::string text(parameterValue);
          // Splitting by vector's line.
@@ -176,8 +176,8 @@ int main() {
             // M Loop...
             for (unsigned int indexM = 0; indexM < vectorLineValues.size(); indexM++) {
                //printf("INDEX_N_M (%d_%d): %s\n", indexN, indexM, vectorLineValues[indexM].c_str());
-               // Filling processingTimeVector (line N, column M).
-               processingTimeVector[indexN][indexM] = atoi(vectorLineValues[indexM].c_str());
+               // Filling processingTimesVector (line N, column M).
+               processingTimesVector[indexN][indexM] = atoi(vectorLineValues[indexM].c_str());
             }
          }
       } else if (strcmp(parameterName, "COST_PER_UNIT_OF_TIME_VECTOR_M") == 0) {
@@ -238,10 +238,10 @@ int main() {
    N = N_TASKS * M_PROCESSORS;
 
    // Initialize the SimpleSchedulerDecoder.
-   SimpleSchedulerDecoder simpleSchedulerDecoder(N_TASKS, M_PROCESSORS, processingTimeVector, costPerUnitOfTimeVector);
+   SimpleSchedulerDecoder simpleSchedulerDecoder(N_TASKS, M_PROCESSORS, processingTimesVector, costPerUnitOfTimeVector);
 
-   // Printing processingTimeVector.
-   simpleSchedulerDecoder.printProcessingTimeVector();
+   // Printing processingTimesVector.
+   simpleSchedulerDecoder.printProcessingTimesVector();
 
    // Printing costPerUnitOfTimeVector.
    simpleSchedulerDecoder.printCostPerUnitOfTimeVector();

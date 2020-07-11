@@ -2,13 +2,13 @@ N_TASKS = 6
 M_PROCESSORS = 2
 PROCESSING_TIME_VECTOR_N_x_M = { {7, 8} | {3, 2} | {4, 6} | {2, 1} | {6, 3} | {12, 5} }
 COST_PER_UNIT_OF_TIME_VECTOR_M = { {8} | {12} }
-P = 100
+P = 10
 PE = 0.10
 PM = 0.10
 RHOE = 0.70
 K = 3
 MAXT = 1
-MAX_GENS = 1000
+MAX_GENS = 1
 X_INTVL = 100
 X_NUMBER = 2
 EOF
