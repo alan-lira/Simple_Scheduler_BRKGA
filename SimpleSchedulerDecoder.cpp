@@ -38,10 +38,18 @@ bool allTasksScheduled(std::vector<int> &E) {
    return result;
 }
 
-bool allProcessorsBusy(std::vector<int> &A) {
+void selectTask(std::vector<int> &E, int taskID) {
+   E[taskID] = 1;
+}
+
+bool processorBusy(std::vector<std::vector<int> > &A, int processID) {
+   return A[processID][0] != 0;
+}
+
+bool allProcessorsBusy(std::vector<std::vector<int> > &A) {
    bool result = true;
    for (unsigned int i = 0; i < A.size(); i++) {
-      if (A[i] == 1) {
+      if (A[i][0] == 0) {
          result = false;
          break;
       }
@@ -49,11 +57,52 @@ bool allProcessorsBusy(std::vector<int> &A) {
    return result;
 }
 
+bool anyProcessorBusy(std::vector<std::vector<int> > &A) {
+   bool result = false;
+   for (unsigned int i = 0; i < A.size(); i++) {
+      if (A[i][0] != 0) {
+         result = true;
+         break;
+      }
+   }
+   return result;
+}
+
+void verifyReturningProcessors(std::vector< std::vector<int> > &A, int T) {
+   for (unsigned int i = 0; i < A.size(); i++) {
+      if (A[i][0] != 0 && A[i][0] <= T) {
+         A[i][0] = 0;
+      }
+   }
+}
+
+void selectProcessor(std::vector< std::vector<int> > &A, int processID, int coolDown) {
+   A[processID][0] = coolDown;
+}
+
+int SimpleSchedulerDecoder::calculateSelectedProcessorCoolDown(int idProcessorSelected, int idTaskSelected, int T) const {
+   return processingTimesVector[idTaskSelected][idProcessorSelected] + T;
+}
+
+int SimpleSchedulerDecoder::calculateSelectedProcessorCost(int idProcessorSelected, int idTaskSelected) const {
+   return processingTimesVector[idTaskSelected][idProcessorSelected] * getCostPerUnitOfTimeVector()[idProcessorSelected];
+}
+
 double SimpleSchedulerDecoder::decode(const std::vector<double> &chromosome) const {
 
-   // Initialize fitnessValue.
-   double fitnessValue = 0.0;
+   // Initializing fitness.
+   double fitness = 0.0;
 
+   // Initializing makespan;
+   int T = 0;
+
+   // Initializing totalCost;
+   int C = 0;
+
+   // Initializing SchedulerPlan_Vector.
+   std::vector<std::tuple<int, int, int, int> > SchedulerPlan_Vector(getTasksAmount());
+
+   // Initializing TaskID_TaskRK_ProcessorRK_Vector.
    std::vector<std::tuple<int, double, double> > TaskID_TaskRK_ProcessorRK_Vector(getTasksAmount());
 
    for (int i = 0; i < getTasksAmount(); i++) {
@@ -65,24 +114,58 @@ double SimpleSchedulerDecoder::decode(const std::vector<double> &chromosome) con
    std::sort(TaskID_TaskRK_ProcessorRK_Vector.begin(), TaskID_TaskRK_ProcessorRK_Vector.end(), compare);
 
    for (int i = 0; i < getTasksAmount(); i++) {
-      //printf("TaskID_TaskRK_ProcessorRK_Vector[%d] = {%d, %f, %f}.\n", i, std::get<0>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<1>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<2>(TaskID_TaskRK_ProcessorRK_Vector[i]));
-      //printf("TaskID_TaskRK_ProcessorRK_Vector[%d] = {%d, %f, %f, %d}.\n", i, std::get<0>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<1>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<2>(TaskID_TaskRK_ProcessorRK_Vector[i]), findProcessorIDByRandomKeyInterval(std::get<2>(TaskID_TaskRK_ProcessorRK_Vector[i])));
+      //printf("TaskID_TaskRK_ProcessorRK_Vector[%d] = {%d, %f, %f}.\n", i, std::get<0>(TaskID_TaskRK_ProcessorRK_Vector[i]) + 1, std::get<1>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<2>(TaskID_TaskRK_ProcessorRK_Vector[i]));
+      printf("TaskID_TaskRK_ProcessorRK_Vector[%d] = {%d, %f, %f, %d}.\n", i, std::get<0>(TaskID_TaskRK_ProcessorRK_Vector[i]) + 1, std::get<1>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<2>(TaskID_TaskRK_ProcessorRK_Vector[i]), findProcessorIDByRandomKeyInterval(std::get<2>(TaskID_TaskRK_ProcessorRK_Vector[i])) + 1);
    }
 
    // Creation of set E of tasks already selected for scheduling.
+   int initialValueE = 0;
    std::vector<int> E;
-   E.resize(getTasksAmount(), 0);
-
-   printf("ALL TASKS SCHEDULED? %d.\n", allTasksScheduled(E));
+   // Setting size of A.
+   E.resize(getTasksAmount(), initialValueE);
 
    // Creation of set A of availables processors that can be chosen.
-   std::vector<int> A;
-   A.resize(getProcessorsAmount(), 1);
+   std::vector< std::vector<int> > A;
+   int initialValueA = 0;
+   // Setting size of A.
+   A.resize(getProcessorsAmount(), std::vector<int>(1, initialValueA));
 
-   printf("ALL PROCESSORS BUSY? %d.\n", allProcessorsBusy(A));
+   // Current task selected for scheduling.
+   int indexTaskSelected = 0;
 
-   // Return fitnessValue.
-   return fitnessValue;
+   while (!allTasksScheduled(E)) { // Enquanto houver tarefa a ser escalonada...
+      int idTaskSelected = std::get<0>(TaskID_TaskRK_ProcessorRK_Vector[indexTaskSelected]); // id da pŕoxima tarefa Ni a ser escalonada.
+      int idProcessorSelected = findProcessorIDByRandomKeyInterval(std::get<2>(TaskID_TaskRK_ProcessorRK_Vector[indexTaskSelected])); // id do processador Mj que deverá escalonar a tarefa Ni.
+      while (processorBusy(A, idProcessorSelected)) { // Enquanto o processador definido para ser selecionado estiver indisponível...
+         T = T + 1; // Incrementar em uma unidade o contador T (makespan).
+         verifyReturningProcessors(A, T); // Verificar, no conjunto A, o retorno dos processadores que terminaram seus cooldowns (estão livres para serem escolhidos).
+      }
+      int processorCoolDown = calculateSelectedProcessorCoolDown(idProcessorSelected, idTaskSelected, T); // Cooldown que o processador Mj passará até tornar-se disponível novamente.
+                                                                                                 // É definido por T + pij, onde pij é o tempo de processamento da tarefa Ni no processador Mj;
+      selectProcessor(A, idProcessorSelected, processorCoolDown); // Selecionando o processador Mj (e tornando-o ocupado).
+      selectTask(E, idTaskSelected); // Marcando no conjunto E que a tarefa Ni foi escalonada.
+      int processorCost = calculateSelectedProcessorCost(idProcessorSelected, idTaskSelected); // Custo de uso do processador Mj para processar a tarefa Ni.
+      C = C + processorCost; // Incrementando o custo total C.
+      SchedulerPlan_Vector[indexTaskSelected] = std::make_tuple(idTaskSelected, idProcessorSelected, getProcessingTimesVector()[idTaskSelected][idProcessorSelected], T);
+      indexTaskSelected = indexTaskSelected + 1;
+   }
+
+   while (anyProcessorBusy(A)) { // Enquanto houver algum processador ocupado...
+      T = T + 1; // Incrementar em uma unidade o contador T (makespan).
+      verifyReturningProcessors(A, T); // Verificar, no conjunto A, o retorno dos processadores que terminaram seus cooldowns (encerraram suas últimas tarefas).
+   }
+
+   for (int i = 0; i < getTasksAmount(); i++) {
+      printf("SchedulerPlan_Vector[%d] {TASK, PROCESSOR, PROCESSING_TIME, START_TIME} = {%d, %d, %d, %d}.\n", i, std::get<0>(SchedulerPlan_Vector[i]) + 1, std::get<1>(SchedulerPlan_Vector[i]) + 1, std::get<2>(SchedulerPlan_Vector[i]), std::get<3>(SchedulerPlan_Vector[i]));
+   }
+
+   //fitness = ((1.0 / T) + (1.0 / C));
+   fitness = - ((1 - T) + (1 - C));
+
+   printf("MAKESPAN = %d | CUSTO = %d | FITNESS = %f.\n", T, C, fitness);
+
+   // Return fitness.
+   return fitness;
 }
 
 void SimpleSchedulerDecoder::printTaskSchedulingPlan(const std::vector<double> &candidate) const {

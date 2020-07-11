@@ -68,6 +68,12 @@ class SimpleSchedulerDecoder {
       // Find processor id by random-key interval.
       int findProcessorIDByRandomKeyInterval(double randomKey) const;
 
+      // Calculate selected processor cooldown.
+      int calculateSelectedProcessorCoolDown(int idProcessorSelected, int idTaskSelected, int T) const;
+
+      // Calculate selected processor cost.
+      int calculateSelectedProcessorCost(int idProcessorSelected, int idTaskSelected) const;
+
 };
 
 #endif
