@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include<tuple>
 #include<vector>
+#include<set>
 
 #include "SimpleSchedulerDecoder.h"
 
@@ -26,6 +27,28 @@ bool compare(const std::tuple<int, double, double> &i, const std::tuple<int, dou
    return std::get<1>(i) < std::get<1>(j);
 }
 
+bool allTasksScheduled(std::vector<int> &E) {
+   bool result = true;
+   for (unsigned int i = 0; i < E.size(); i++) {
+      if (E[i] == 0) {
+         result = false;
+         break;
+      }
+   }
+   return result;
+}
+
+bool allProcessorsBusy(std::vector<int> &A) {
+   bool result = true;
+   for (unsigned int i = 0; i < A.size(); i++) {
+      if (A[i] == 1) {
+         result = false;
+         break;
+      }
+   }
+   return result;
+}
+
 double SimpleSchedulerDecoder::decode(const std::vector<double> &chromosome) const {
 
    // Initialize fitnessValue.
@@ -45,6 +68,18 @@ double SimpleSchedulerDecoder::decode(const std::vector<double> &chromosome) con
       //printf("TaskID_TaskRK_ProcessorRK_Vector[%d] = {%d, %f, %f}.\n", i, std::get<0>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<1>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<2>(TaskID_TaskRK_ProcessorRK_Vector[i]));
       //printf("TaskID_TaskRK_ProcessorRK_Vector[%d] = {%d, %f, %f, %d}.\n", i, std::get<0>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<1>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<2>(TaskID_TaskRK_ProcessorRK_Vector[i]), findProcessorIDByRandomKeyInterval(std::get<2>(TaskID_TaskRK_ProcessorRK_Vector[i])));
    }
+
+   // Creation of set E of tasks already selected for scheduling.
+   std::vector<int> E;
+   E.resize(getTasksAmount(), 0);
+
+   printf("ALL TASKS SCHEDULED? %d.\n", allTasksScheduled(E));
+
+   // Creation of set A of availables processors that can be chosen.
+   std::vector<int> A;
+   A.resize(getProcessorsAmount(), 1);
+
+   printf("ALL PROCESSORS BUSY? %d.\n", allProcessorsBusy(A));
 
    // Return fitnessValue.
    return fitnessValue;
