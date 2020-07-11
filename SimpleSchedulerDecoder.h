@@ -21,8 +21,8 @@ class SimpleSchedulerDecoder {
       // Decode a chromosome, returning its fitness as a double-precision floating point.
       double decode(const std::vector<double> &chromosome) const;
 
-      // Print candidate-chromosome's tasks scheduling plan.
-      void printTaskSchedulingPlan(const std::vector<double> &candidate) const;
+      // Print best chromosome's tasks scheduling plan.
+      void printTaskSchedulingPlan(const std::vector<double> &bestChromosome) const;
 
       // Get tasks amount.
       int getTasksAmount() const;
@@ -79,6 +79,12 @@ class SimpleSchedulerDecoder {
 
       // First scheduling strategy.
       std::vector<std::tuple<int, int, int, int> > executeFirstSchedulingStrategy(int &T, int &C, const std::vector<double> &chromosome) const;
+
+      // Second scheduling strategy.
+      std::vector<std::tuple<int, int, int, int> > executeSecondSchedulingStrategy(int &T, int &C, const std::vector<double> &chromosome) const;
+
+      // Search for random available processor at set A.
+      int searchRandomAvailableProcessor(std::vector<std::vector<int> > &A) const;
 
 };
 

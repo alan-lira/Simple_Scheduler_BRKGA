@@ -3,6 +3,7 @@
 #include<tuple>
 #include<vector>
 #include<set>
+#include<random>
 
 #include "SimpleSchedulerDecoder.h"
 
@@ -24,7 +25,11 @@ SimpleSchedulerDecoder::~SimpleSchedulerDecoder() {
 
 }
 
-bool compare(const std::tuple<int, double, double> &i, const std::tuple<int, double, double> &j) {
+bool compareFirstStrategy(const std::tuple<int, double, double> &i, const std::tuple<int, double, double> &j) {
+   return std::get<1>(i) < std::get<1>(j);
+}
+
+bool compareSecondStrategy(const std::tuple<int, double> &i, const std::tuple<int, double> &j) {
    return std::get<1>(i) < std::get<1>(j);
 }
 
@@ -77,6 +82,24 @@ void verifyReturningProcessors(std::vector< std::vector<int> > &A, int T) {
    }
 }
 
+int SimpleSchedulerDecoder::searchRandomAvailableProcessor(std::vector<std::vector<int> > &A) const {
+   std::random_device rd; // Only used once to initialise (seed) engine.
+   std::mt19937 rng(rd()); // Random-number engine used (Mersenne-Twister in this case).
+   int min = 0; // Minimum interval range's value.
+   int max = getProcessorsAmount() - 1; // Maximum interval range's value.
+   std::uniform_int_distribution<int> uni(min, max); // Guaranteed unbiased.
+   bool successful = false;
+   int randomProcessorID;
+   while (!successful) {
+      randomProcessorID = uni(rng);
+      bool isProcessBusy = processorBusy(A, randomProcessorID);
+      if (!isProcessBusy) {
+         successful = true;
+      }
+   }
+   return randomProcessorID;
+}
+
 void selectProcessor(std::vector< std::vector<int> > &A, int processID, int coolDown) {
    A[processID][0] = coolDown;
 }
@@ -98,18 +121,16 @@ std::vector<std::tuple<int, int, int, int> > SimpleSchedulerDecoder::executeFirs
 
    for (int i = 0; i < getTasksAmount(); i++) {
       TaskID_TaskRK_ProcessorRK_Vector[i] = std::make_tuple(i, chromosome[i], chromosome[i + getTasksAmount()]);
-      //printf("TaskID_TaskRK_ProcessorRK_Vector[%d] = {%d, %f, %f}.\n", i, std::get<0>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<1>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<2>(TaskID_TaskRK_ProcessorRK_Vector[i]));
+      //printf("(BEFORE) TaskID_TaskRK_ProcessorRK_Vector[%d] = {%d, %f, %f}.\n", i, std::get<0>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<1>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<2>(TaskID_TaskRK_ProcessorRK_Vector[i]));
    }
 
    // Sorting by task random-key value (ascending order).
-   std::sort(TaskID_TaskRK_ProcessorRK_Vector.begin(), TaskID_TaskRK_ProcessorRK_Vector.end(), compare);
+   std::sort(TaskID_TaskRK_ProcessorRK_Vector.begin(), TaskID_TaskRK_ProcessorRK_Vector.end(), compareFirstStrategy);
 
-   /*
-   for (int i = 0; i < getTasksAmount(); i++) {
-      //printf("TaskID_TaskRK_ProcessorRK_Vector[%d] = {%d, %f, %f}.\n", i, std::get<0>(TaskID_TaskRK_ProcessorRK_Vector[i]) + 1, std::get<1>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<2>(TaskID_TaskRK_ProcessorRK_Vector[i]));
-      //printf("TaskID_TaskRK_ProcessorRK_Vector[%d] = {%d, %f, %f, %d}.\n", i, std::get<0>(TaskID_TaskRK_ProcessorRK_Vector[i]) + 1, std::get<1>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<2>(TaskID_TaskRK_ProcessorRK_Vector[i]), findProcessorIDByRandomKeyInterval(std::get<2>(TaskID_TaskRK_ProcessorRK_Vector[i])) + 1);
-   }
-   */
+   //for (int i = 0; i < getTasksAmount(); i++) {
+      //printf("(NOW) TaskID_TaskRK_ProcessorRK_Vector[%d] = {%d, %f, %f}.\n", i, std::get<0>(TaskID_TaskRK_ProcessorRK_Vector[i]) + 1, std::get<1>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<2>(TaskID_TaskRK_ProcessorRK_Vector[i]));
+      //printf("(NOW) TaskID_TaskRK_ProcessorRK_Vector[%d] = {%d, %f, %f, %d}.\n", i, std::get<0>(TaskID_TaskRK_ProcessorRK_Vector[i]) + 1, std::get<1>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<2>(TaskID_TaskRK_ProcessorRK_Vector[i]), findProcessorIDByRandomKeyInterval(std::get<2>(TaskID_TaskRK_ProcessorRK_Vector[i])) + 1);
+   //}
 
    // Creation of set E of tasks already selected for scheduling.
    int initialValueE = 0;
@@ -147,9 +168,66 @@ std::vector<std::tuple<int, int, int, int> > SimpleSchedulerDecoder::executeFirs
       T = T + 1; // Incrementar em uma unidade o contador T (makespan).
       verifyReturningProcessors(A, T); // Verificar, no conjunto A, o retorno dos processadores que terminaram seus cooldowns (encerraram suas últimas tarefas).
    }
-
    return schedulingPlanVector;
+}
 
+std::vector<std::tuple<int, int, int, int> > SimpleSchedulerDecoder::executeSecondSchedulingStrategy(int &T, int &C, const std::vector<double> &chromosome) const {
+   // Initializing schedulingPlanVector.
+   std::vector<std::tuple<int, int, int, int> > schedulingPlanVector(getTasksAmount());
+
+   // Initializing TaskID_TaskRK_Vector.
+   std::vector<std::tuple<int, double> > TaskID_TaskRK_Vector(getTasksAmount());
+
+   for (int i = 0; i < getTasksAmount(); i++) {
+      TaskID_TaskRK_Vector[i] = std::make_tuple(i, chromosome[i]);
+      //printf("(BEFORE) TaskID_TaskRK_Vector[%d] = {%d, %f}.\n", i, std::get<0>(TaskID_TaskRK_Vector[i]), std::get<1>(TaskID_TaskRK_Vector[i]));
+   }
+
+   // Sorting by task random-key value (ascending order).
+   std::sort(TaskID_TaskRK_Vector.begin(), TaskID_TaskRK_Vector.end(), compareSecondStrategy);
+
+   //for (int i = 0; i < getTasksAmount(); i++) {
+      //printf("(NOW) TaskID_TaskRK_Vector[%d] = {%d, %f}.\n", i, std::get<0>(TaskID_TaskRK_Vector[i]) + 1, std::get<1>(TaskID_TaskRK_Vector[i]));
+   //}
+
+   // Creation of set E of tasks already selected for scheduling.
+   int initialValueE = 0;
+   std::vector<int> E;
+   // Setting size of A.
+   E.resize(getTasksAmount(), initialValueE);
+
+   // Creation of set A of availables processors that can be chosen.
+   std::vector< std::vector<int> > A;
+   int initialValueA = 0;
+   // Setting size of A.
+   A.resize(getProcessorsAmount(), std::vector<int>(1, initialValueA));
+
+   // Current task selected for scheduling.
+   int indexTaskSelected = 0;
+
+   while (!allTasksScheduled(E)) { // Enquanto houver tarefa a ser escalonada...
+      while (allProcessorsBusy(A)) { // Enquanto não existir processador disponível...
+         T = T + 1; // Incrementar em uma unidade o contador T (makespan).
+         verifyReturningProcessors(A, T); // Verificar, no conjunto A, o retorno dos processadores que terminaram seus cooldowns (estão livres para serem escolhidos).
+      }
+      int idProcessorSelected = searchRandomAvailableProcessor(A); // Procurar, aleatoriamente, um processador disponível Mj.
+      int idTaskSelected = std::get<0>(TaskID_TaskRK_Vector[indexTaskSelected]); // id da pŕoxima tarefa Ni a ser escalonada.
+      int processorCoolDown = calculateSelectedProcessorCoolDown(idProcessorSelected, idTaskSelected, T); // Cooldown que o processador Mj passará até tornar-se disponível novamente.
+                                                                                                           // É definido por T + pij, onde pij é o tempo de processamento da tarefa Ni no processador Mj;
+//printf("PROCESSOR SELECTED = %d | TASK SELECTED = %d | COOLDOWN = %d.\n", idProcessorSelected + 1, idTaskSelected + 1, processorCoolDown);
+      selectProcessor(A, idProcessorSelected, processorCoolDown); // Selecionando o processador Mj (e tornando-o ocupado).
+      selectTask(E, idTaskSelected); // Marcando no conjunto E que a tarefa Ni foi escalonada.
+      int processorCost = calculateSelectedProcessorCost(idProcessorSelected, idTaskSelected); // Custo de uso do processador Mj para processar a tarefa Ni.
+      C = C + processorCost; // Incrementando o custo total C.
+      schedulingPlanVector[indexTaskSelected] = std::make_tuple(idTaskSelected, idProcessorSelected, getProcessingTimesVector()[idTaskSelected][idProcessorSelected], T); // Adicionando {Mj,Ni} ao plano de escalonamento.
+      indexTaskSelected = indexTaskSelected + 1;
+   }
+   while (anyProcessorBusy(A)) { // Enquanto houver algum processador ocupado...
+      T = T + 1; // Incrementar em uma unidade o contador T (makespan).
+      verifyReturningProcessors(A, T); // Verificar, no conjunto A, o retorno dos processadores que terminaram seus cooldowns (encerraram suas últimas tarefas).
+   }
+//printf("FITNESS = %f\n", - ((1.0 - T) + (1.0 - C)));
+   return schedulingPlanVector;
 }
 
 double SimpleSchedulerDecoder::decode(const std::vector<double> &chromosome) const {
@@ -163,7 +241,10 @@ double SimpleSchedulerDecoder::decode(const std::vector<double> &chromosome) con
    std::vector<std::tuple<int, int, int, int> > schedulingPlanVector(getTasksAmount());
 
    // Execution of first scheduling strategy.
-   schedulingPlanVector = executeFirstSchedulingStrategy(T, C, chromosome);
+   //schedulingPlanVector = executeFirstSchedulingStrategy(T, C, chromosome);
+
+   // Execution of second scheduling strategy.
+   schedulingPlanVector = executeSecondSchedulingStrategy(T, C, chromosome);
 
    /*
    for (int i = 0; i < getTasksAmount(); i++) {
@@ -184,7 +265,7 @@ double SimpleSchedulerDecoder::decode(const std::vector<double> &chromosome) con
    return fitness;
 }
 
-void SimpleSchedulerDecoder::printTaskSchedulingPlan(const std::vector<double> &candidate) const {
+void SimpleSchedulerDecoder::printTaskSchedulingPlan(const std::vector<double> &bestChromosome) const {
    // Initializing T (makespan).
    int T = 0;
 
@@ -194,10 +275,15 @@ void SimpleSchedulerDecoder::printTaskSchedulingPlan(const std::vector<double> &
    // Initializing schedulingPlanVector.
    std::vector<std::tuple<int, int, int, int> > schedulingPlanVector(getTasksAmount());
 
-   schedulingPlanVector = executeFirstSchedulingStrategy(T, C, candidate);
+   // Execution of first scheduling strategy.
+   //schedulingPlanVector = executeFirstSchedulingStrategy(T, C, bestChromosome);
 
-   printf("Tasks amount: %d.\n\n", getTasksAmount());
-   printf("Processors amount: %d.\n\n", getProcessorsAmount());
+   // Execution of second scheduling strategy.
+   //schedulingPlanVector = executeSecondSchedulingStrategy(T, C, bestChromosome);
+
+   // Printing results...
+   printf("Number of Tasks: %d.\n\n", getTasksAmount());
+   printf("Number of Processors: %d.\n\n", getProcessorsAmount());
 
    printf("Task Scheduling Plan (Best Solution):\n\n");
    for (int i = 0; i < getTasksAmount(); i++) {

@@ -283,10 +283,20 @@ int main() {
       printf("\n");
    }
 
-   printf("Best solution found has objective value = %f\n\n", algorithm.getBestFitness());
+   printf("------- RESULTS -------\n\n");
+
+   printf("Objective value (Best Solution): %f.\n\n", algorithm.getBestFitness());
+
+   const std::vector<double> bestChromosome(algorithm.getBestChromosome());
+
+   printf("|");
+   for (unsigned int i = 0; i < bestChromosome.size(); i++) {
+      printf(" %f |", bestChromosome[i]);
+   }
+   printf("\n");
 
    // Printing best task scheduling plan.
-   simpleSchedulerDecoder.printTaskSchedulingPlan(algorithm.getBestChromosome());
+   simpleSchedulerDecoder.printTaskSchedulingPlan(bestChromosome);
 
    return 0;
 }
