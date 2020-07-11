@@ -10,11 +10,13 @@
 SimpleSchedulerDecoder::SimpleSchedulerDecoder(int tasksAmount,
                                                int processorsAmount,
                                                std::vector<std::vector<int> > processingTimesVector,
-                                               std::vector<int> costPerUnitOfTimeVector)
+                                               std::vector<int> costPerUnitOfTimeVector,
+                                               int schedulingStrategy)
                                                : tasksAmount(tasksAmount),
                                                  processorsAmount(processorsAmount),
                                                  processingTimesVector(processingTimesVector),
                                                  costPerUnitOfTimeVector(costPerUnitOfTimeVector),
+                                                 schedulingStrategy(schedulingStrategy),
                                                  processorsRandomKeyIntervalVector(),
                                                  schedulingPlanVector() {
    // Setting processors' random-key interval.
@@ -214,7 +216,6 @@ std::vector<std::tuple<int, int, int, int> > SimpleSchedulerDecoder::executeSeco
       int idTaskSelected = std::get<0>(TaskID_TaskRK_Vector[indexTaskSelected]); // id da pŕoxima tarefa Ni a ser escalonada.
       int processorCoolDown = calculateSelectedProcessorCoolDown(idProcessorSelected, idTaskSelected, T); // Cooldown que o processador Mj passará até tornar-se disponível novamente.
                                                                                                            // É definido por T + pij, onde pij é o tempo de processamento da tarefa Ni no processador Mj;
-//printf("PROCESSOR SELECTED = %d | TASK SELECTED = %d | COOLDOWN = %d.\n", idProcessorSelected + 1, idTaskSelected + 1, processorCoolDown);
       selectProcessor(A, idProcessorSelected, processorCoolDown); // Selecionando o processador Mj (e tornando-o ocupado).
       selectTask(E, idTaskSelected); // Marcando no conjunto E que a tarefa Ni foi escalonada.
       int processorCost = calculateSelectedProcessorCost(idProcessorSelected, idTaskSelected); // Custo de uso do processador Mj para processar a tarefa Ni.
@@ -226,7 +227,6 @@ std::vector<std::tuple<int, int, int, int> > SimpleSchedulerDecoder::executeSeco
       T = T + 1; // Incrementar em uma unidade o contador T (makespan).
       verifyReturningProcessors(A, T); // Verificar, no conjunto A, o retorno dos processadores que terminaram seus cooldowns (encerraram suas últimas tarefas).
    }
-//printf("FITNESS = %f\n", - ((1.0 - T) + (1.0 - C)));
    return schedulingPlanVector;
 }
 
@@ -240,11 +240,19 @@ double SimpleSchedulerDecoder::decode(const std::vector<double> &chromosome) con
    // Initializing schedulingPlanVector.
    std::vector<std::tuple<int, int, int, int> > schedulingPlanVector(getTasksAmount());
 
-   // Execution of first scheduling strategy.
-   //schedulingPlanVector = executeFirstSchedulingStrategy(T, C, chromosome);
+   switch (schedulingStrategy) {
 
-   // Execution of second scheduling strategy.
-   schedulingPlanVector = executeSecondSchedulingStrategy(T, C, chromosome);
+      case 1:
+         // Execution of first scheduling strategy.
+         schedulingPlanVector = executeFirstSchedulingStrategy(T, C, chromosome);
+         break;
+
+      case 2:
+         // Execution of second scheduling strategy.
+         schedulingPlanVector = executeSecondSchedulingStrategy(T, C, chromosome);
+         break;
+
+   }
 
    /*
    for (int i = 0; i < getTasksAmount(); i++) {
@@ -266,33 +274,32 @@ double SimpleSchedulerDecoder::decode(const std::vector<double> &chromosome) con
 }
 
 void SimpleSchedulerDecoder::printTaskSchedulingPlan(const std::vector<double> &bestChromosome) const {
-   // Initializing T (makespan).
-   int T = 0;
+   if (schedulingStrategy == 1) {
+      // Initializing T (makespan).
+      int T = 0;
 
-   // Initializing C (total monetary cost).
-   int C = 0;
+      // Initializing C (total monetary cost).
+      int C = 0;
 
-   // Initializing schedulingPlanVector.
-   std::vector<std::tuple<int, int, int, int> > schedulingPlanVector(getTasksAmount());
+      // Initializing schedulingPlanVector.
+      std::vector<std::tuple<int, int, int, int> > schedulingPlanVector(getTasksAmount());
 
-   // Execution of first scheduling strategy.
-   //schedulingPlanVector = executeFirstSchedulingStrategy(T, C, bestChromosome);
+      // Execution of first scheduling strategy.
+      schedulingPlanVector = executeFirstSchedulingStrategy(T, C, bestChromosome);
 
-   // Execution of second scheduling strategy.
-   //schedulingPlanVector = executeSecondSchedulingStrategy(T, C, bestChromosome);
+      // Printing results...
+      printf("Number of Tasks: %d.\n\n", getTasksAmount());
+      printf("Number of Processors: %d.\n\n", getProcessorsAmount());
 
-   // Printing results...
-   printf("Number of Tasks: %d.\n\n", getTasksAmount());
-   printf("Number of Processors: %d.\n\n", getProcessorsAmount());
+      printf("Task Scheduling Plan (Best Solution):\n\n");
+      for (int i = 0; i < getTasksAmount(); i++) {
+         printf("Execute Task %d on Processor %d when clock time = %d (processing duration: %d unit(s) of time).\n", std::get<0>(schedulingPlanVector[i]) + 1, std::get<1>(schedulingPlanVector[i]) + 1, std::get<3>(schedulingPlanVector[i]), std::get<2>(schedulingPlanVector[i]));
+      }
 
-   printf("Task Scheduling Plan (Best Solution):\n\n");
-   for (int i = 0; i < getTasksAmount(); i++) {
-      printf("Execute Task %d on Processor %d when clock time = %d (processing duration: %d unit(s) of time).\n", std::get<0>(schedulingPlanVector[i]) + 1, std::get<1>(schedulingPlanVector[i]) + 1, std::get<3>(schedulingPlanVector[i]), std::get<2>(schedulingPlanVector[i]));
+      printf("\nMakespan: %d.\n\n", T);
+
+      printf("Total monetary cost: %d.\n\n", C);
    }
-
-   printf("\nMakespan: %d.\n\n", T);
-
-   printf("Total monetary cost: %d.\n\n", C);
 }
 
 int SimpleSchedulerDecoder::getTasksAmount() const {

@@ -13,7 +13,8 @@ class SimpleSchedulerDecoder {
       SimpleSchedulerDecoder(int tasksAmount,
                              int processorsAmount,
                              std::vector<std::vector<int> > processingTimesVector,
-                             std::vector<int> costPerUnitOfTimeVector);
+                             std::vector<int> costPerUnitOfTimeVector,
+                             int schedulingStrategy);
 
       // Destructor.
       ~SimpleSchedulerDecoder();
@@ -42,6 +43,9 @@ class SimpleSchedulerDecoder {
       // Print cost per unit of time's vector.
       void printCostPerUnitOfTimeVector() const;
 
+      // Get scheduling strategy to be used by decoder.
+      int getSchedulingStrategy() const;
+
    private:
 
       // Tasks amount.
@@ -55,6 +59,9 @@ class SimpleSchedulerDecoder {
 
       // Cost per unit of time's vector.
       std::vector<int> costPerUnitOfTimeVector;
+
+      // Scheduling strategy to be used by decoder.
+      int schedulingStrategy;
 
       // Processors random-key interval's vector.
       std::vector<std::vector<double> > processorsRandomKeyIntervalVector;

@@ -41,6 +41,15 @@ int main() {
    // Processors amount.
    int M_PROCESSORS = 0;
 
+   // Creation of processingTimesVector.
+   std::vector< std::vector<int> > processingTimesVector;
+
+   // Creation of costPerUnitOfTimeVector.
+   std::vector<int> costPerUnitOfTimeVector;
+
+   // Scheduling strategy to be used by SimpleSchedulerDecoder.
+   int SCHEDULING_STRATEGY = 0;
+
    // Size of chromosomes.
    unsigned N = 0;
 
@@ -70,15 +79,6 @@ int main() {
 
    // Exchange top 2 best.
    unsigned X_NUMBER = 0;
-
-   // Initialization value for vectors.
-   int initializationValue = 0;
-
-   // Creation of processingTimesVector.
-   std::vector< std::vector<int> > processingTimesVector;
-
-   // Creation of costPerUnitOfTimeVector.
-   std::vector<int> costPerUnitOfTimeVector;
 
    // Loading BRKGA and Scheduler parameters:
 
@@ -158,6 +158,8 @@ int main() {
          // Setting M_PROCESSORS' value.
          M_PROCESSORS = atoi(parameterValue);
       } else if (strcmp(parameterName, "PROCESSING_TIME_VECTOR_N_x_M") == 0) {
+         // Initialization value for processingTimesVector.
+         int initializationValue = 0;
          // Setting size of processingTimesVector.
          processingTimesVector.resize(N_TASKS, std::vector<int>(M_PROCESSORS, initializationValue));
          // Converting char array to string.
@@ -181,6 +183,8 @@ int main() {
             }
          }
       } else if (strcmp(parameterName, "COST_PER_UNIT_OF_TIME_VECTOR_M") == 0) {
+         // Initialization value for costPerUnitOfTimeVector.
+         int initializationValue = 0;
          // Setting size of costPerUnitOfTimeVector.
          costPerUnitOfTimeVector.resize(M_PROCESSORS, initializationValue);
          // Converting char array to string.
@@ -197,6 +201,9 @@ int main() {
             // Filling costPerUnitOfTimeVector (column).
             costPerUnitOfTimeVector[indexM] = atoi(vectorLines[indexM].c_str());
          }
+      } else if (strcmp(parameterName, "SCHEDULING_STRATEGY") == 0) {
+         // Setting SCHEDULING_STRATEGY's value.
+         SCHEDULING_STRATEGY = atoi(parameterValue);
       } else if (strcmp(parameterName, "P") == 0) {
          // Setting P's value.
          P = atoi(parameterValue);
@@ -238,7 +245,7 @@ int main() {
    N = N_TASKS * M_PROCESSORS;
 
    // Initialize the SimpleSchedulerDecoder.
-   SimpleSchedulerDecoder simpleSchedulerDecoder(N_TASKS, M_PROCESSORS, processingTimesVector, costPerUnitOfTimeVector);
+   SimpleSchedulerDecoder simpleSchedulerDecoder(N_TASKS, M_PROCESSORS, processingTimesVector, costPerUnitOfTimeVector, SCHEDULING_STRATEGY);
 
    // Printing processingTimesVector.
    simpleSchedulerDecoder.printProcessingTimesVector();
@@ -289,11 +296,13 @@ int main() {
 
    const std::vector<double> bestChromosome(algorithm.getBestChromosome());
 
+   /*
    printf("|");
    for (unsigned int i = 0; i < bestChromosome.size(); i++) {
       printf(" %f |", bestChromosome[i]);
    }
    printf("\n");
+   */
 
    // Printing best task scheduling plan.
    simpleSchedulerDecoder.printTaskSchedulingPlan(bestChromosome);
