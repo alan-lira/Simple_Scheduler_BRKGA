@@ -42,6 +42,9 @@ class SimpleSchedulerDecoder {
       // Print cost per unit of time's vector.
       void printCostPerUnitOfTimeVector() const;
 
+      // Get scheduling plan's vector.
+      std::vector<std::tuple<int, int, int, int> > getSchedulingPlanVector() const;
+
    private:
 
       // Tasks amount.
@@ -73,6 +76,14 @@ class SimpleSchedulerDecoder {
 
       // Calculate selected processor cost.
       int calculateSelectedProcessorCost(int idProcessorSelected, int idTaskSelected) const;
+
+      // Scheduling plan's vector.
+      std::vector<std::tuple<int, int, int, int> > schedulingPlanVector;
+
+      // Set scheduling plan's vector.
+      std::vector<std::tuple<int, int, int, int> > setSchedulingPlan(std::vector<std::tuple<int, int, int, int> > &schedulingPlanVector) const;
+
+      std::vector<std::tuple<int, int, int, int> > executeFirstSchedulingStrategy(int &T, int &C, const std::vector<double> &chromosome) const;
 
 };
 
