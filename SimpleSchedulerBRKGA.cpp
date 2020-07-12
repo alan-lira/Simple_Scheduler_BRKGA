@@ -242,7 +242,11 @@ int main() {
    }
 
    // Setting N's value (size of chromosome).
-   N = N_TASKS * M_PROCESSORS;
+   if (SCHEDULING_STRATEGY == 1) {
+      N = 2 * N_TASKS;
+   } else {
+      N = N_TASKS;
+   }
 
    // Initialize the SimpleSchedulerDecoder.
    SimpleSchedulerDecoder simpleSchedulerDecoder(N_TASKS, M_PROCESSORS, processingTimesVector, costPerUnitOfTimeVector, SCHEDULING_STRATEGY);

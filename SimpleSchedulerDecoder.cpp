@@ -264,7 +264,6 @@ double SimpleSchedulerDecoder::decode(const std::vector<double> &chromosome) con
    double fitness = 0.0;
 
    // Calculating fitness.
-   //fitness = ((1.0 / T) + (1.0 / C));
    fitness = - ((1 - T) + (1 - C));
 
    //printf("MAKESPAN = %d | CUSTO = %d | FITNESS = %f.\n", T, C, fitness);
