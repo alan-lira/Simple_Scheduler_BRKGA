@@ -11,12 +11,12 @@ SimpleSchedulerDecoder::SimpleSchedulerDecoder(int tasksAmount,
                                                int processorsAmount,
                                                std::vector<std::vector<int> > processingTimesVector,
                                                std::vector<int> costPerUnitOfTimeVector,
-                                               int schedulingStrategy)
+                                               int decodingStrategy)
                                                : tasksAmount(tasksAmount),
                                                  processorsAmount(processorsAmount),
                                                  processingTimesVector(processingTimesVector),
                                                  costPerUnitOfTimeVector(costPerUnitOfTimeVector),
-                                                 schedulingStrategy(schedulingStrategy),
+                                                 decodingStrategy(decodingStrategy),
                                                  processorsRandomKeyIntervalVector(),
                                                  schedulingPlanVector() {
    // Setting processors' random-key interval.
@@ -114,7 +114,7 @@ int SimpleSchedulerDecoder::calculateSelectedProcessorCost(int idProcessorSelect
    return processingTimesVector[idTaskSelected][idProcessorSelected] * getCostPerUnitOfTimeVector()[idProcessorSelected];
 }
 
-std::vector<std::tuple<int, int, int, int> > SimpleSchedulerDecoder::executeFirstSchedulingStrategy(int &T, int &C, const std::vector<double> &chromosome) const {
+std::vector<std::tuple<int, int, int, int> > SimpleSchedulerDecoder::executeFirstDecodingStrategy(int &T, int &C, const std::vector<double> &chromosome) const {
    // Initializing schedulingPlanVector.
    std::vector<std::tuple<int, int, int, int> > schedulingPlanVector(getTasksAmount());
 
@@ -173,7 +173,7 @@ std::vector<std::tuple<int, int, int, int> > SimpleSchedulerDecoder::executeFirs
    return schedulingPlanVector;
 }
 
-std::vector<std::tuple<int, int, int, int> > SimpleSchedulerDecoder::executeSecondSchedulingStrategy(int &T, int &C, const std::vector<double> &chromosome) const {
+std::vector<std::tuple<int, int, int, int> > SimpleSchedulerDecoder::executeSecondDecodingStrategy(int &T, int &C, const std::vector<double> &chromosome) const {
    // Initializing schedulingPlanVector.
    std::vector<std::tuple<int, int, int, int> > schedulingPlanVector(getTasksAmount());
 
@@ -240,16 +240,16 @@ double SimpleSchedulerDecoder::decode(const std::vector<double> &chromosome) con
    // Initializing schedulingPlanVector.
    std::vector<std::tuple<int, int, int, int> > schedulingPlanVector(getTasksAmount());
 
-   switch (schedulingStrategy) {
+   switch (decodingStrategy) {
 
       case 1:
-         // Execution of first scheduling strategy.
-         schedulingPlanVector = executeFirstSchedulingStrategy(T, C, chromosome);
+         // Execution of first decoding strategy.
+         schedulingPlanVector = executeFirstDecodingStrategy(T, C, chromosome);
          break;
 
       case 2:
-         // Execution of second scheduling strategy.
-         schedulingPlanVector = executeSecondSchedulingStrategy(T, C, chromosome);
+         // Execution of second decoding strategy.
+         schedulingPlanVector = executeSecondDecodingStrategy(T, C, chromosome);
          break;
 
    }
@@ -273,7 +273,7 @@ double SimpleSchedulerDecoder::decode(const std::vector<double> &chromosome) con
 }
 
 void SimpleSchedulerDecoder::printTaskSchedulingPlan(const std::vector<double> &bestChromosome) const {
-   if (schedulingStrategy == 1) {
+   if (decodingStrategy == 1) {
       // Initializing T (makespan).
       int T = 0;
 
@@ -283,8 +283,8 @@ void SimpleSchedulerDecoder::printTaskSchedulingPlan(const std::vector<double> &
       // Initializing schedulingPlanVector.
       std::vector<std::tuple<int, int, int, int> > schedulingPlanVector(getTasksAmount());
 
-      // Execution of first scheduling strategy.
-      schedulingPlanVector = executeFirstSchedulingStrategy(T, C, bestChromosome);
+      // Execution of first decoding strategy.
+      schedulingPlanVector = executeFirstDecodingStrategy(T, C, bestChromosome);
 
       // Printing results...
       printf("Number of Tasks: %d.\n\n", getTasksAmount());

@@ -47,8 +47,8 @@ int main() {
    // Creation of costPerUnitOfTimeVector.
    std::vector<int> costPerUnitOfTimeVector;
 
-   // Scheduling strategy to be used by SimpleSchedulerDecoder.
-   int SCHEDULING_STRATEGY = 0;
+   // Decoding strategy to be used by SimpleSchedulerDecoder.
+   int DECODING_STRATEGY = 0;
 
    // Size of chromosomes.
    unsigned N = 0;
@@ -201,9 +201,9 @@ int main() {
             // Filling costPerUnitOfTimeVector (column).
             costPerUnitOfTimeVector[indexM] = atoi(vectorLines[indexM].c_str());
          }
-      } else if (strcmp(parameterName, "SCHEDULING_STRATEGY") == 0) {
-         // Setting SCHEDULING_STRATEGY's value.
-         SCHEDULING_STRATEGY = atoi(parameterValue);
+      } else if (strcmp(parameterName, "DECODING_STRATEGY") == 0) {
+         // Setting DECODING_STRATEGY's value.
+         DECODING_STRATEGY = atoi(parameterValue);
       } else if (strcmp(parameterName, "P") == 0) {
          // Setting P's value.
          P = atoi(parameterValue);
@@ -242,14 +242,14 @@ int main() {
    }
 
    // Setting N's value (size of chromosome).
-   if (SCHEDULING_STRATEGY == 1) {
+   if (DECODING_STRATEGY == 1) {
       N = 2 * N_TASKS;
    } else {
       N = N_TASKS;
    }
 
    // Initialize the SimpleSchedulerDecoder.
-   SimpleSchedulerDecoder simpleSchedulerDecoder(N_TASKS, M_PROCESSORS, processingTimesVector, costPerUnitOfTimeVector, SCHEDULING_STRATEGY);
+   SimpleSchedulerDecoder simpleSchedulerDecoder(N_TASKS, M_PROCESSORS, processingTimesVector, costPerUnitOfTimeVector, DECODING_STRATEGY);
 
    // Printing processingTimesVector.
    simpleSchedulerDecoder.printProcessingTimesVector();
@@ -295,6 +295,8 @@ int main() {
    }
 
    printf("------- RESULTS -------\n\n");
+
+   printf("Decoding strategy: %d.\n\n", DECODING_STRATEGY);
 
    printf("Objective value (Best Solution): %f.\n\n", algorithm.getBestFitness());
 

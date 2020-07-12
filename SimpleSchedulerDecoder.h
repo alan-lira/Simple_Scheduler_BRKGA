@@ -14,7 +14,7 @@ class SimpleSchedulerDecoder {
                              int processorsAmount,
                              std::vector<std::vector<int> > processingTimesVector,
                              std::vector<int> costPerUnitOfTimeVector,
-                             int schedulingStrategy);
+                             int decodingStrategy);
 
       // Destructor.
       ~SimpleSchedulerDecoder();
@@ -43,8 +43,8 @@ class SimpleSchedulerDecoder {
       // Print cost per unit of time's vector.
       void printCostPerUnitOfTimeVector() const;
 
-      // Get scheduling strategy to be used by decoder.
-      int getSchedulingStrategy() const;
+      // Get decoding strategy to be used by decoder.
+      int getDecodingStrategy() const;
 
    private:
 
@@ -60,8 +60,8 @@ class SimpleSchedulerDecoder {
       // Cost per unit of time's vector.
       std::vector<int> costPerUnitOfTimeVector;
 
-      // Scheduling strategy to be used by decoder.
-      int schedulingStrategy;
+      // Decoding strategy to be used by decoder.
+      int decodingStrategy;
 
       // Processors random-key interval's vector.
       std::vector<std::vector<double> > processorsRandomKeyIntervalVector;
@@ -84,11 +84,11 @@ class SimpleSchedulerDecoder {
       // Scheduling plan's vector.
       std::vector<std::tuple<int, int, int, int> > schedulingPlanVector;
 
-      // First scheduling strategy.
-      std::vector<std::tuple<int, int, int, int> > executeFirstSchedulingStrategy(int &T, int &C, const std::vector<double> &chromosome) const;
+      // First decoding strategy.
+      std::vector<std::tuple<int, int, int, int> > executeFirstDecodingStrategy(int &T, int &C, const std::vector<double> &chromosome) const;
 
-      // Second scheduling strategy.
-      std::vector<std::tuple<int, int, int, int> > executeSecondSchedulingStrategy(int &T, int &C, const std::vector<double> &chromosome) const;
+      // Second decoding strategy.
+      std::vector<std::tuple<int, int, int, int> > executeSecondDecodingStrategy(int &T, int &C, const std::vector<double> &chromosome) const;
 
       // Search for random available processor at set A.
       int searchRandomAvailableProcessor(std::vector<std::vector<int> > &A) const;
