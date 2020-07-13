@@ -177,7 +177,7 @@ int main() {
                // M Loop...
                for (int indexM = 0; indexM < M_PROCESSORS; indexM++) {
                   int minTNM = 1; // Minimum interval range's value.
-                  int maxTNM = 100; // Maximum interval range's value.
+                  int maxTNM = 30; // Maximum interval range's value.
                   // Filling PROCESSING_TIME_VECTOR_N_x_M (line N, column M) with random integers.
                   PROCESSING_TIME_VECTOR_N_x_M[indexN][indexM] = getRandomInteger(minTNM, maxTNM);
                }
@@ -272,77 +272,242 @@ int main() {
       free(lineContent);
    }
 
+   // Execute all decoding strategies available (implemented).
+   if (DECODING_STRATEGY == 0) {
 
-   std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+      // Execute DECODING_STRATEGY 1.
+      {
 
-   // Size n of chromosomes.
-   unsigned n = 0;
+         std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
-   // Setting n's value (size of chromosome).
-   if (DECODING_STRATEGY == 1) {
-      n = 2 * N_TASKS;
+         // Size n of chromosomes.
+         unsigned n = 0;
+
+         // Forcing execution of DECODING_STRATEGY 1.
+         DECODING_STRATEGY = 1;
+
+         // Setting n's value (size of chromosome).
+         if (DECODING_STRATEGY == 1) {
+            n = 2 * N_TASKS;
+         } else {
+            n = N_TASKS;
+         }
+
+         // Initialize the SimpleSchedulerDecoder.
+         SimpleSchedulerDecoder simpleSchedulerDecoder(N_TASKS, M_PROCESSORS, PROCESSING_TIME_VECTOR_N_x_M, COST_PER_UNIT_OF_TIME_VECTOR_M, DECODING_STRATEGY);
+
+         // Printing PROCESSING_TIME_VECTOR_N_x_M.
+         //simpleSchedulerDecoder.printProcessingTimesVector();
+
+         // Printing COST_PER_UNIT_OF_TIME_VECTOR_M.
+         //simpleSchedulerDecoder.printCostPerUnitOfTimeVector();
+
+         // Seed to the random number generator.
+         const long unsigned RNG_SEED = 0;
+
+         // Initialize the random number generator.
+         MTRand randomNumberGenerator(RNG_SEED);
+
+         // Initialize the BRKGA-based heuristic.
+         BRKGA <SimpleSchedulerDecoder, MTRand> algorithm(n, P, Pe, Pm, RHOa, simpleSchedulerDecoder, randomNumberGenerator, PI, MAX_THREADS_DECODING);
+
+         // Current generation.
+         unsigned generation = 0;
+
+         printf("\nRunning for %d generations...\n\n", STOPPING_CRITERION_MAX_GENERATIONS);
+
+         while (generation < STOPPING_CRITERION_MAX_GENERATIONS) {
+            // Evolve the population for one generation.
+            algorithm.evolve();
+            if ((++generation) % Kp == 0) {
+               // Exchange top individuals.
+               algorithm.exchangeElite(Km);
+            }
+         }
+
+         // Print the fitness of the top 10 individuals of each population.
+         printf("Fitness of the top 10 individuals of each population:\n\n");
+
+         // Makes sure we have at least 10 individuals.
+         const unsigned bound = std::min(P, unsigned(10));
+
+         for (unsigned i = 0; i < PI; i++) {
+            printf("Population #%d:\n", i);
+            for (unsigned j = 0; j < bound; j++) {
+               printf("\t%d) %.7f\n", j, algorithm.getPopulation(i).getFitness(j));
+            }
+            printf("\n");
+         }
+
+         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+
+         printf("------- RESULTS -------\n\n");
+
+         printf("Decoding strategy: %d.\n\n", DECODING_STRATEGY);
+
+         printf("Elapsed time: %f second(s).\n\n", (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()) / 1000000.0);
+
+         printf("Objective value (Best Solution): %f.\n\n", algorithm.getBestFitness());
+
+         // Printing best tasks scheduling's plan.
+         simpleSchedulerDecoder.printTaskSchedulingPlan();
+
+      }
+
+      // Execute DECODING_STRATEGY 2.
+      {
+
+         std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+
+         // Size n of chromosomes.
+         unsigned n = 0;
+
+         // Forcing execution of DECODING_STRATEGY 2.
+         DECODING_STRATEGY = 2;
+
+         // Setting n's value (size of chromosome).
+         if (DECODING_STRATEGY == 1) {
+            n = 2 * N_TASKS;
+         } else {
+            n = N_TASKS;
+         }
+
+         // Initialize the SimpleSchedulerDecoder.
+         SimpleSchedulerDecoder simpleSchedulerDecoder(N_TASKS, M_PROCESSORS, PROCESSING_TIME_VECTOR_N_x_M, COST_PER_UNIT_OF_TIME_VECTOR_M, DECODING_STRATEGY);
+
+         // Printing PROCESSING_TIME_VECTOR_N_x_M.
+         //simpleSchedulerDecoder.printProcessingTimesVector();
+
+         // Printing COST_PER_UNIT_OF_TIME_VECTOR_M.
+         //simpleSchedulerDecoder.printCostPerUnitOfTimeVector();
+
+         // Seed to the random number generator.
+         const long unsigned RNG_SEED = 0;
+
+         // Initialize the random number generator.
+         MTRand randomNumberGenerator(RNG_SEED);
+
+         // Initialize the BRKGA-based heuristic.
+         BRKGA <SimpleSchedulerDecoder, MTRand> algorithm(n, P, Pe, Pm, RHOa, simpleSchedulerDecoder, randomNumberGenerator, PI, MAX_THREADS_DECODING);
+
+         // Current generation.
+         unsigned generation = 0;
+
+         printf("\nRunning for %d generations...\n\n", STOPPING_CRITERION_MAX_GENERATIONS);
+
+         while (generation < STOPPING_CRITERION_MAX_GENERATIONS) {
+            // Evolve the population for one generation.
+            algorithm.evolve();
+            if ((++generation) % Kp == 0) {
+               // Exchange top individuals.
+               algorithm.exchangeElite(Km);
+            }
+         }
+
+         // Print the fitness of the top 10 individuals of each population.
+         printf("Fitness of the top 10 individuals of each population:\n\n");
+
+         // Makes sure we have at least 10 individuals.
+         const unsigned bound = std::min(P, unsigned(10));
+
+         for (unsigned i = 0; i < PI; i++) {
+            printf("Population #%d:\n", i);
+            for (unsigned j = 0; j < bound; j++) {
+               printf("\t%d) %.7f\n", j, algorithm.getPopulation(i).getFitness(j));
+            }
+            printf("\n");
+         }
+
+         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+
+         printf("------- RESULTS -------\n\n");
+
+         printf("Decoding strategy: %d.\n\n", DECODING_STRATEGY);
+
+         printf("Elapsed time: %f second(s).\n\n", (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()) / 1000000.0);
+
+         printf("Objective value (Best Solution): %f.\n\n", algorithm.getBestFitness());
+
+         // Printing best tasks scheduling's plan.
+         simpleSchedulerDecoder.printTaskSchedulingPlan();
+
+      }
+
+   // Execute DECODING_STRATEGY from BRKGA_and_Scheduler_Parameters.txt file.
    } else {
-      n = N_TASKS;
-   }
 
-   // Initialize the SimpleSchedulerDecoder.
-   SimpleSchedulerDecoder simpleSchedulerDecoder(N_TASKS, M_PROCESSORS, PROCESSING_TIME_VECTOR_N_x_M, COST_PER_UNIT_OF_TIME_VECTOR_M, DECODING_STRATEGY);
+      std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
-   // Printing PROCESSING_TIME_VECTOR_N_x_M.
-   //simpleSchedulerDecoder.printProcessingTimesVector();
+      // Size n of chromosomes.
+      unsigned n = 0;
 
-   // Printing COST_PER_UNIT_OF_TIME_VECTOR_M.
-   //simpleSchedulerDecoder.printCostPerUnitOfTimeVector();
-
-   // Seed to the random number generator.
-   const long unsigned RNG_SEED = 0;
-
-   // Initialize the random number generator.
-   MTRand randomNumberGenerator(RNG_SEED);
-
-   // Initialize the BRKGA-based heuristic.
-   BRKGA <SimpleSchedulerDecoder, MTRand> algorithm(n, P, Pe, Pm, RHOa, simpleSchedulerDecoder, randomNumberGenerator, PI, MAX_THREADS_DECODING);
-
-   // Current generation.
-   unsigned generation = 0;
-
-   printf("\nRunning for %d generations...\n\n", STOPPING_CRITERION_MAX_GENERATIONS);
-
-   while (generation < STOPPING_CRITERION_MAX_GENERATIONS) {
-      // Evolve the population for one generation.
-      algorithm.evolve();
-      if ((++generation) % Kp == 0) {
-         // Exchange top individuals.
-         algorithm.exchangeElite(Km);
+      // Setting n's value (size of chromosome).
+      if (DECODING_STRATEGY == 1) {
+         n = 2 * N_TASKS;
+      } else {
+         n = N_TASKS;
       }
-   }
 
-   // Print the fitness of the top 10 individuals of each population.
-   printf("Fitness of the top 10 individuals of each population:\n\n");
+      // Initialize the SimpleSchedulerDecoder.
+      SimpleSchedulerDecoder simpleSchedulerDecoder(N_TASKS, M_PROCESSORS, PROCESSING_TIME_VECTOR_N_x_M, COST_PER_UNIT_OF_TIME_VECTOR_M, DECODING_STRATEGY);
 
-   // Makes sure we have at least 10 individuals.
-   const unsigned bound = std::min(P, unsigned(10));
+      // Printing PROCESSING_TIME_VECTOR_N_x_M.
+      //simpleSchedulerDecoder.printProcessingTimesVector();
 
-   for (unsigned i = 0; i < PI; i++) {
-      printf("Population #%d:\n", i);
-      for (unsigned j = 0; j < bound; j++) {
-         printf("\t%d) %.7f\n", j, algorithm.getPopulation(i).getFitness(j));
+      // Printing COST_PER_UNIT_OF_TIME_VECTOR_M.
+      //simpleSchedulerDecoder.printCostPerUnitOfTimeVector();
+
+      // Seed to the random number generator.
+      const long unsigned RNG_SEED = 0;
+
+      // Initialize the random number generator.
+      MTRand randomNumberGenerator(RNG_SEED);
+
+      // Initialize the BRKGA-based heuristic.
+      BRKGA <SimpleSchedulerDecoder, MTRand> algorithm(n, P, Pe, Pm, RHOa, simpleSchedulerDecoder, randomNumberGenerator, PI, MAX_THREADS_DECODING);
+
+      // Current generation.
+      unsigned generation = 0;
+
+      printf("\nRunning for %d generations...\n\n", STOPPING_CRITERION_MAX_GENERATIONS);
+
+      while (generation < STOPPING_CRITERION_MAX_GENERATIONS) {
+         // Evolve the population for one generation.
+         algorithm.evolve();
+         if ((++generation) % Kp == 0) {
+            // Exchange top individuals.
+            algorithm.exchangeElite(Km);
+         }
       }
-      printf("\n");
+
+      // Print the fitness of the top 10 individuals of each population.
+      printf("Fitness of the top 10 individuals of each population:\n\n");
+
+      // Makes sure we have at least 10 individuals.
+      const unsigned bound = std::min(P, unsigned(10));
+
+      for (unsigned i = 0; i < PI; i++) {
+         printf("Population #%d:\n", i);
+         for (unsigned j = 0; j < bound; j++) {
+            printf("\t%d) %.7f\n", j, algorithm.getPopulation(i).getFitness(j));
+         }
+         printf("\n");
+      }
+
+      std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+
+      printf("------- RESULTS -------\n\n");
+
+      printf("Decoding strategy: %d.\n\n", DECODING_STRATEGY);
+
+      printf("Elapsed time: %f second(s).\n\n", (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()) / 1000000.0);
+
+      printf("Objective value (Best Solution): %f.\n\n", algorithm.getBestFitness());
+
+      // Printing best tasks scheduling's plan.
+      simpleSchedulerDecoder.printTaskSchedulingPlan();
+
    }
-
-   std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-
-   printf("------- RESULTS -------\n\n");
-
-   printf("Decoding strategy: %d.\n\n", DECODING_STRATEGY);
-
-   printf("Elapsed time: %f second(s).\n\n", (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()) / 1000000.0);
-
-   printf("Objective value (Best Solution): %f.\n\n", algorithm.getBestFitness());
-
-   // Printing best tasks scheduling's plan.
-   simpleSchedulerDecoder.printTaskSchedulingPlan();
 
    return 0;
 }
