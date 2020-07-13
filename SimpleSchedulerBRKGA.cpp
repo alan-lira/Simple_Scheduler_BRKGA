@@ -5,11 +5,19 @@
 #include <regex.h>
 #include <vector>
 #include <sstream>
+#include <random>
 #include <chrono>
 
 #include "brkgaAPI/BRKGA.h"
 #include "brkgaAPI/MTRand.h"
 #include "SimpleSchedulerDecoder.h"
+
+int getRandomInteger(int min, int max) {
+   std::random_device rd; // Only used once to initialise (seed) engine.
+   std::mt19937 rng(rd()); // Random-number engine used (Mersenne-Twister in this case).
+   std::uniform_int_distribution<int> uni(min, max); // Guaranteed unbiased.
+   return uni(rng);
+}
 
 std::vector<std::string> split(const std::string &s, char delimiter) {
    std::vector<std::string> tokens;
@@ -162,22 +170,36 @@ int main() {
          PROCESSING_TIME_VECTOR_N_x_M.resize(N_TASKS, std::vector<int>(M_PROCESSORS, initializationValue));
          // Converting char array to string.
          std::string text(parameterValue);
-         // Splitting by vector's line.
-         std::vector<std::string> vectorLines = split(text, '|');
-         // N Loop...
-         for (unsigned int indexN = 0; indexN < vectorLines.size(); indexN++) {
-            // Removing matrix garbage.
-            replaceAll(vectorLines[indexN], "{", "");
-            replaceAll(vectorLines[indexN], " ", "");
-            replaceAll(vectorLines[indexN], "}", "");
-            //printf("vectorLines[%d] = %s\n", indexN, vectorLines[indexN].c_str());
-            // Splitting by vector's column.
-            std::vector<std::string> vectorLineValues = split(vectorLines[indexN], ',');
-            // M Loop...
-            for (unsigned int indexM = 0; indexM < vectorLineValues.size(); indexM++) {
-               //printf("INDEX_N_M (%d_%d): %s\n", indexN, indexM, vectorLineValues[indexM].c_str());
-               // Filling PROCESSING_TIME_VECTOR_N_x_M (line N, column M).
-               PROCESSING_TIME_VECTOR_N_x_M[indexN][indexM] = atoi(vectorLineValues[indexM].c_str());
+         // Veryfing if Filling is RANDOM.
+         if (strcmp(parameterValue, "RANDOM") == 0) {
+            // N Loop...
+            for (int indexN = 0; indexN < N_TASKS; indexN++) {
+               // M Loop...
+               for (int indexM = 0; indexM < M_PROCESSORS; indexM++) {
+                  int minTNM = 1; // Minimum interval range's value.
+                  int maxTNM = 100; // Maximum interval range's value.
+                  // Filling PROCESSING_TIME_VECTOR_N_x_M (line N, column M) with random integers.
+                  PROCESSING_TIME_VECTOR_N_x_M[indexN][indexM] = getRandomInteger(minTNM, maxTNM);
+               }
+            }
+         } else {
+            // Splitting by vector's line.
+            std::vector<std::string> vectorLines = split(text, '|');
+            // N Loop...
+            for (unsigned int indexN = 0; indexN < vectorLines.size(); indexN++) {
+               // Removing matrix garbage.
+               replaceAll(vectorLines[indexN], "{", "");
+               replaceAll(vectorLines[indexN], " ", "");
+               replaceAll(vectorLines[indexN], "}", "");
+               //printf("vectorLines[%d] = %s\n", indexN, vectorLines[indexN].c_str());
+               // Splitting by vector's column.
+               std::vector<std::string> vectorLineValues = split(vectorLines[indexN], ',');
+               // M Loop...
+               for (unsigned int indexM = 0; indexM < vectorLineValues.size(); indexM++) {
+                  //printf("INDEX_N_M (%d_%d): %s\n", indexN, indexM, vectorLineValues[indexM].c_str());
+                  // Filling PROCESSING_TIME_VECTOR_N_x_M (line N, column M).
+                  PROCESSING_TIME_VECTOR_N_x_M[indexN][indexM] = atoi(vectorLineValues[indexM].c_str());
+               }
             }
          }
       } else if (strcmp(parameterName, "COST_PER_UNIT_OF_TIME_VECTOR_M") == 0) {
@@ -187,17 +209,28 @@ int main() {
          COST_PER_UNIT_OF_TIME_VECTOR_M.resize(M_PROCESSORS, initializationValue);
          // Converting char array to string.
          std::string text(parameterValue);
-         // Splitting by vector's line.
-         std::vector<std::string> vectorLines = split(text, '|');
-         // M Loop...
-         for (unsigned int indexM = 0; indexM < vectorLines.size(); indexM++) {
-            // Removing matrix garbage.
-            replaceAll(vectorLines[indexM], "{", "");
-            replaceAll(vectorLines[indexM], " ", "");
-            replaceAll(vectorLines[indexM], "}", "");
-            //printf("vectorLines[%d] = %s\n", indexM, vectorLines[indexM].c_str());
-            // Filling COST_PER_UNIT_OF_TIME_VECTOR_M (column).
-            COST_PER_UNIT_OF_TIME_VECTOR_M[indexM] = atoi(vectorLines[indexM].c_str());
+         // Veryfing if Filling is RANDOM.
+         if (strcmp(parameterValue, "RANDOM") == 0) {
+            // M Loop...
+            for (int indexM = 0; indexM < M_PROCESSORS; indexM++) {
+               int minCM = 1; // Minimum interval range's value.
+               int maxCM = 15; // Maximum interval range's value.
+               // Filling COST_PER_UNIT_OF_TIME_VECTOR_M (column) with random integers.
+               COST_PER_UNIT_OF_TIME_VECTOR_M[indexM] = getRandomInteger(minCM, maxCM);
+            }
+         } else {
+            // Splitting by vector's line.
+            std::vector<std::string> vectorLines = split(text, '|');
+            // M Loop...
+            for (unsigned int indexM = 0; indexM < vectorLines.size(); indexM++) {
+               // Removing matrix garbage.
+               replaceAll(vectorLines[indexM], "{", "");
+               replaceAll(vectorLines[indexM], " ", "");
+               replaceAll(vectorLines[indexM], "}", "");
+               //printf("vectorLines[%d] = %s\n", indexM, vectorLines[indexM].c_str());
+               // Filling COST_PER_UNIT_OF_TIME_VECTOR_M (column).
+               COST_PER_UNIT_OF_TIME_VECTOR_M[indexM] = atoi(vectorLines[indexM].c_str());
+            }
          }
       } else if (strcmp(parameterName, "DECODING_STRATEGY") == 0) {
          // Setting DECODING_STRATEGY's value.
@@ -304,7 +337,7 @@ int main() {
 
    printf("Decoding strategy: %d.\n\n", DECODING_STRATEGY);
 
-   printf("Elapsed time: %f second(s).\n", (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()) / 1000000.0);
+   printf("Elapsed time: %f second(s).\n\n", (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()) / 1000000.0);
 
    printf("Objective value (Best Solution): %f.\n\n", algorithm.getBestFitness());
 
