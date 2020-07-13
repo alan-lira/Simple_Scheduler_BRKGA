@@ -277,9 +277,9 @@ void SimpleSchedulerDecoder::printTaskSchedulingPlan() const {
       printf("Execute Task %d on Processor %d when clock time = %d (processing duration: %d unit(s) of time).\n", std::get<0>(bestSchedulingPlanVector[i]) + 1, std::get<1>(bestSchedulingPlanVector[i]) + 1, std::get<3>(bestSchedulingPlanVector[i]), std::get<2>(bestSchedulingPlanVector[i]));
    }
 
-   printf("\nMakespan: %d.\n\n", std::get<1>(bestSchedulingPlan[0]));
+   printf("\nMakespan (T): %d.\n\n", std::get<1>(bestSchedulingPlan[0]));
 
-   printf("Total monetary cost: %d.\n\n", std::get<2>(bestSchedulingPlan[0]));
+   printf("Total monetary cost (C): %d.\n\n", std::get<2>(bestSchedulingPlan[0]));
 
 }
 

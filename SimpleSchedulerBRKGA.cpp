@@ -5,6 +5,7 @@
 #include <regex.h>
 #include <vector>
 #include <sstream>
+#include <chrono>
 
 #include "brkgaAPI/BRKGA.h"
 #include "brkgaAPI/MTRand.h"
@@ -33,7 +34,7 @@ void replaceAll(std::string &str, const std::string &from, const std::string &to
 
 int main() {
 
-   printf("Welcome to the SimpleSchedulerBRKGA.\n\n");
+   printf("Welcome to the Simple Scheduler BRKGA.\n\n");
 
    // Tasks amount.
    int N_TASKS = 0;
@@ -238,6 +239,9 @@ int main() {
       free(lineContent);
    }
 
+
+   std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+
    // Size n of chromosomes.
    unsigned n = 0;
 
@@ -294,9 +298,13 @@ int main() {
       printf("\n");
    }
 
+   std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+
    printf("------- RESULTS -------\n\n");
 
    printf("Decoding strategy: %d.\n\n", DECODING_STRATEGY);
+
+   printf("Elapsed time: %f second(s).\n", (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()) / 1000000.0);
 
    printf("Objective value (Best Solution): %f.\n\n", algorithm.getBestFitness());
 
