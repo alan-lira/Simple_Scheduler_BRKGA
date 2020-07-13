@@ -23,7 +23,7 @@ class SimpleSchedulerDecoder {
       double decode(const std::vector<double> &chromosome) const;
 
       // Print best chromosome's tasks scheduling plan.
-      void printTaskSchedulingPlan(const std::vector<double> &bestChromosome) const;
+      void printTaskSchedulingPlan() const;
 
       // Get tasks amount.
       int getTasksAmount() const;
@@ -81,8 +81,17 @@ class SimpleSchedulerDecoder {
       // Calculate selected processor cost.
       int calculateSelectedProcessorCost(int idProcessorSelected, int idTaskSelected) const;
 
-      // Scheduling plan's vector.
-      std::vector<std::tuple<int, int, int, int> > schedulingPlanVector;
+      // Best Scheduling's plan.
+      std::vector<std::tuple<double, int, int, std::vector<std::tuple<int, int, int, int> >> > bestSchedulingPlan;
+
+      // Initializing Best Scheduling's plan.
+      void initBestSchedulingPlan(std::vector<std::tuple<double, int, int, std::vector<std::tuple<int, int, int, int> >> > &bestSchedulingPlan);
+
+      // Get Best Scheduling's plan.
+      std::vector<std::tuple<double, int, int, std::vector<std::tuple<int, int, int, int> >> > getBestSchedulingPlan();
+
+      // Set Best Scheduling's plan.
+      void setBestSchedulingPlan(double &fitness, int &T, int &C, std::vector<std::tuple<int, int, int, int> > &schedulingPlan);
 
       // First decoding strategy.
       std::vector<std::tuple<int, int, int, int> > executeFirstDecodingStrategy(int &T, int &C, const std::vector<double> &chromosome) const;

@@ -18,9 +18,11 @@ SimpleSchedulerDecoder::SimpleSchedulerDecoder(int tasksAmount,
                                                  costPerUnitOfTimeVector(costPerUnitOfTimeVector),
                                                  decodingStrategy(decodingStrategy),
                                                  processorsRandomKeyIntervalVector(),
-                                                 schedulingPlanVector() {
+                                                 bestSchedulingPlan() {
    // Setting processors' random-key interval.
    processorsRandomKeyIntervalVector = SimpleSchedulerDecoder::setProcessorsRandomKeyInterval();
+
+   SimpleSchedulerDecoder::initBestSchedulingPlan(bestSchedulingPlan);
 }
 
 SimpleSchedulerDecoder::~SimpleSchedulerDecoder() {
@@ -123,16 +125,10 @@ std::vector<std::tuple<int, int, int, int> > SimpleSchedulerDecoder::executeFirs
 
    for (int i = 0; i < getTasksAmount(); i++) {
       TaskID_TaskRK_ProcessorRK_Vector[i] = std::make_tuple(i, chromosome[i], chromosome[i + getTasksAmount()]);
-      //printf("(BEFORE) TaskID_TaskRK_ProcessorRK_Vector[%d] = {%d, %f, %f}.\n", i, std::get<0>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<1>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<2>(TaskID_TaskRK_ProcessorRK_Vector[i]));
    }
 
    // Sorting by task random-key value (ascending order).
    std::sort(TaskID_TaskRK_ProcessorRK_Vector.begin(), TaskID_TaskRK_ProcessorRK_Vector.end(), compareFirstStrategy);
-
-   //for (int i = 0; i < getTasksAmount(); i++) {
-      //printf("(NOW) TaskID_TaskRK_ProcessorRK_Vector[%d] = {%d, %f, %f}.\n", i, std::get<0>(TaskID_TaskRK_ProcessorRK_Vector[i]) + 1, std::get<1>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<2>(TaskID_TaskRK_ProcessorRK_Vector[i]));
-      //printf("(NOW) TaskID_TaskRK_ProcessorRK_Vector[%d] = {%d, %f, %f, %d}.\n", i, std::get<0>(TaskID_TaskRK_ProcessorRK_Vector[i]) + 1, std::get<1>(TaskID_TaskRK_ProcessorRK_Vector[i]), std::get<2>(TaskID_TaskRK_ProcessorRK_Vector[i]), findProcessorIDByRandomKeyInterval(std::get<2>(TaskID_TaskRK_ProcessorRK_Vector[i])) + 1);
-   //}
 
    // Creation of set E of tasks already selected for scheduling.
    int initialValueE = 0;
@@ -182,15 +178,10 @@ std::vector<std::tuple<int, int, int, int> > SimpleSchedulerDecoder::executeSeco
 
    for (int i = 0; i < getTasksAmount(); i++) {
       TaskID_TaskRK_Vector[i] = std::make_tuple(i, chromosome[i]);
-      //printf("(BEFORE) TaskID_TaskRK_Vector[%d] = {%d, %f}.\n", i, std::get<0>(TaskID_TaskRK_Vector[i]), std::get<1>(TaskID_TaskRK_Vector[i]));
    }
 
    // Sorting by task random-key value (ascending order).
    std::sort(TaskID_TaskRK_Vector.begin(), TaskID_TaskRK_Vector.end(), compareSecondStrategy);
-
-   //for (int i = 0; i < getTasksAmount(); i++) {
-      //printf("(NOW) TaskID_TaskRK_Vector[%d] = {%d, %f}.\n", i, std::get<0>(TaskID_TaskRK_Vector[i]) + 1, std::get<1>(TaskID_TaskRK_Vector[i]));
-   //}
 
    // Creation of set E of tasks already selected for scheduling.
    int initialValueE = 0;
@@ -208,12 +199,12 @@ std::vector<std::tuple<int, int, int, int> > SimpleSchedulerDecoder::executeSeco
    int indexTaskSelected = 0;
 
    while (!allTasksScheduled(E)) { // Enquanto houver tarefa a ser escalonada...
+      int idTaskSelected = std::get<0>(TaskID_TaskRK_Vector[indexTaskSelected]); // id da pŕoxima tarefa Ni a ser escalonada.
       while (allProcessorsBusy(A)) { // Enquanto não existir processador disponível...
          T = T + 1; // Incrementar em uma unidade o contador T (makespan).
          verifyReturningProcessors(A, T); // Verificar, no conjunto A, o retorno dos processadores que terminaram seus cooldowns (estão livres para serem escolhidos).
       }
       int idProcessorSelected = searchRandomAvailableProcessor(A); // Procurar, aleatoriamente, um processador disponível Mj.
-      int idTaskSelected = std::get<0>(TaskID_TaskRK_Vector[indexTaskSelected]); // id da pŕoxima tarefa Ni a ser escalonada.
       int processorCoolDown = calculateSelectedProcessorCoolDown(idProcessorSelected, idTaskSelected, T); // Cooldown que o processador Mj passará até tornar-se disponível novamente.
                                                                                                            // É definido por T + pij, onde pij é o tempo de processamento da tarefa Ni no processador Mj;
       selectProcessor(A, idProcessorSelected, processorCoolDown); // Selecionando o processador Mj (e tornando-o ocupado).
@@ -254,51 +245,72 @@ double SimpleSchedulerDecoder::decode(const std::vector<double> &chromosome) con
 
    }
 
-   /*
-   for (int i = 0; i < getTasksAmount(); i++) {
-      printf("schedulingPlanVector[%d] {TASK, PROCESSOR, PROCESSING_TIME, START_TIME} = {%d, %d, %d, %d}.\n", i, std::get<0>(schedulingPlanVector[i]) + 1, std::get<1>(schedulingPlanVector[i]) + 1, std::get<2>(schedulingPlanVector[i]), std::get<3>(schedulingPlanVector[i]));
-   }
-   */
-
    // Initializing fitness.
    double fitness = 0.0;
 
    // Calculating fitness.
    fitness = - ((1 - T) + (1 - C));
 
-   //printf("MAKESPAN = %d | CUSTO = %d | FITNESS = %f.\n", T, C, fitness);
+   // Best Fitness so far.
+   double bestFitness = std::get<0>((const_cast<SimpleSchedulerDecoder*>(this))->getBestSchedulingPlan()[0]);
+
+   // Found better scheduling plan with this chromossome.
+   if (bestFitness > fitness) {
+      (const_cast<SimpleSchedulerDecoder*>(this))->setBestSchedulingPlan(fitness, T, C, schedulingPlanVector);
+   }
 
    // Returning fitness value.
    return fitness;
 }
 
-void SimpleSchedulerDecoder::printTaskSchedulingPlan(const std::vector<double> &bestChromosome) const {
-   if (decodingStrategy == 1) {
-      // Initializing T (makespan).
-      int T = 0;
+void SimpleSchedulerDecoder::printTaskSchedulingPlan() const {
 
-      // Initializing C (total monetary cost).
-      int C = 0;
+   // Printing results...
+   printf("Number of Tasks: %d.\n\n", getTasksAmount());
+   printf("Number of Processors: %d.\n\n", getProcessorsAmount());
 
-      // Initializing schedulingPlanVector.
-      std::vector<std::tuple<int, int, int, int> > schedulingPlanVector(getTasksAmount());
+   printf("Task Scheduling Plan (Best Solution):\n\n");
 
-      // Execution of first decoding strategy.
-      schedulingPlanVector = executeFirstDecodingStrategy(T, C, bestChromosome);
+   std::vector<std::tuple<int, int, int, int> > bestSchedulingPlanVector = std::get<3>(bestSchedulingPlan[0]);
 
-      // Printing results...
-      printf("Number of Tasks: %d.\n\n", getTasksAmount());
-      printf("Number of Processors: %d.\n\n", getProcessorsAmount());
-
-      printf("Task Scheduling Plan (Best Solution):\n\n");
-      for (int i = 0; i < getTasksAmount(); i++) {
-         printf("Execute Task %d on Processor %d when clock time = %d (processing duration: %d unit(s) of time).\n", std::get<0>(schedulingPlanVector[i]) + 1, std::get<1>(schedulingPlanVector[i]) + 1, std::get<3>(schedulingPlanVector[i]), std::get<2>(schedulingPlanVector[i]));
-      }
-
-      printf("\nMakespan: %d.\n\n", T);
-
-      printf("Total monetary cost: %d.\n\n", C);
+   for (int i = 0; i < getTasksAmount(); i++) {
+      printf("Execute Task %d on Processor %d when clock time = %d (processing duration: %d unit(s) of time).\n", std::get<0>(bestSchedulingPlanVector[i]) + 1, std::get<1>(bestSchedulingPlanVector[i]) + 1, std::get<3>(bestSchedulingPlanVector[i]), std::get<2>(bestSchedulingPlanVector[i]));
    }
+
+   printf("\nMakespan: %d.\n\n", std::get<1>(bestSchedulingPlan[0]));
+
+   printf("Total monetary cost: %d.\n\n", std::get<2>(bestSchedulingPlan[0]));
+
+}
+
+void SimpleSchedulerDecoder::initBestSchedulingPlan(std::vector<std::tuple<double, int, int, std::vector<std::tuple<int, int, int, int> >> > &bestSchedulingPlan) {
+   // Initializing initBestSchedulingPlan.
+   std::vector<std::tuple<double, int, int, std::vector<std::tuple<int, int, int, int> >> > initBestSchedulingPlan(1);
+
+   // Initializing emptySchedulingPlan.
+   std::vector<std::tuple<int, int, int, int> > emptySchedulingPlan(getTasksAmount());
+   for (int i = 0; i < getTasksAmount(); i++) {
+      emptySchedulingPlan[i] = std::make_tuple(-1, -1, -1, -1);
+   }
+
+   // Setting empty <T, C, SP> into initBestSchedulingPlan;
+   double fitness = 999999.0;
+   int T = 0;
+   int C = 0;
+
+   initBestSchedulingPlan[0] = std::make_tuple(fitness, T, C, emptySchedulingPlan);
+
+   // Storing initBestSchedulingPlan into bestSchedulingPlan;
+   bestSchedulingPlan = initBestSchedulingPlan;
+}
+
+std::vector<std::tuple<double, int, int, std::vector<std::tuple<int, int, int, int> >> > SimpleSchedulerDecoder::getBestSchedulingPlan() {
+   return bestSchedulingPlan;
+}
+
+void SimpleSchedulerDecoder::setBestSchedulingPlan(double &fitness, int &T, int &C, std::vector<std::tuple<int, int, int, int> > &schedulingPlan) {
+   // Storing newBestSchedulingPlan into bestSchedulingPlan;
+   bestSchedulingPlan[0] = std::make_tuple(fitness, T, C, schedulingPlan);
 }
 
 int SimpleSchedulerDecoder::getTasksAmount() const {
@@ -314,11 +326,10 @@ std::vector<std::vector<int> > SimpleSchedulerDecoder::getProcessingTimesVector(
 }
 
 void SimpleSchedulerDecoder::printProcessingTimesVector() const {
-   for (unsigned int n = 0; n < getProcessingTimesVector().size(); n++) { // printf("LINHA %d.\n", n);
-      for (unsigned int m = 0; m < getProcessingTimesVector()[n].size(); m++) { // printf("COLUNA %d.\n", m);
+   for (unsigned int n = 0; n < getProcessingTimesVector().size(); n++) { // Row n.
+      for (unsigned int m = 0; m < getProcessingTimesVector()[n].size(); m++) { // Column m.
          // Tempos de processamento das tarefas n [0, ..., tasksCount] nas máquinas m [0, ..., processorCount].
-         //printf("processingTimesVector[%d][%d] = %d.\n", n, m, getProcessingTimesVector()[n][m]);
-         //printf("A tarefa n%d é processada na máquina m%d em %d unidade(s) de tempo.\n", (n + 1), (m + 1), getProcessingTimesVector()[n][m]);
+         printf("A tarefa n%d é processada na máquina m%d em %d unidade(s) de tempo.\n", (n + 1), (m + 1), getProcessingTimesVector()[n][m]);
       }
       printf("\n");
    }
@@ -329,10 +340,9 @@ std::vector<int> SimpleSchedulerDecoder::getCostPerUnitOfTimeVector() const {
 }
 
 void SimpleSchedulerDecoder::printCostPerUnitOfTimeVector() const {
-   for (unsigned int m = 0; m < getCostPerUnitOfTimeVector().size(); m++) { // printf("COLUNA %d.\n", m);
+   for (unsigned int m = 0; m < getCostPerUnitOfTimeVector().size(); m++) { // Column m.
       // Custo monetário de processamento por unidade de tempo na máquina m [0, ..., processorCount]:
-      //printf("costPerUnitOfTimeVector[%d] = %d.\n", m, getCostPerUnitOfProcessingTimeVector()[m]);
-      //printf("A máquina m%d custa %d unidade(s) monetária(s) por unidade de tempo de processamento.\n", (m + 1), getCostPerUnitOfTimeVector()[m]);
+      printf("A máquina m%d custa %d unidade(s) monetária(s) por unidade de tempo de processamento.\n", (m + 1), getCostPerUnitOfTimeVector()[m]);
    }
 }
 
@@ -350,8 +360,6 @@ std::vector<std::vector<double> > SimpleSchedulerDecoder::setProcessorsRandomKey
    for (int indexM = 0; indexM < getProcessorsAmount(); indexM++) {
       processorsRandomKeyIntervalVector[indexM][0] = a + (indexM * (b / getProcessorsAmount()));
       processorsRandomKeyIntervalVector[indexM][1] = a + ((indexM + 1) * (b / getProcessorsAmount()));
-      //printf("processorsRandomKeyIntervalVector[%d][0] = %f.\n", indexM, processorsRandomKeyIntervalVector[indexM][0]);
-      //printf("processorsRandomKeyIntervalVector[%d][1] = %f.\n", indexM, processorsRandomKeyIntervalVector[indexM][1]);
    }
    return processorsRandomKeyIntervalVector;
 }

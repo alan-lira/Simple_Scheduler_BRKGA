@@ -252,10 +252,10 @@ int main() {
    SimpleSchedulerDecoder simpleSchedulerDecoder(N_TASKS, M_PROCESSORS, PROCESSING_TIME_VECTOR_N_x_M, COST_PER_UNIT_OF_TIME_VECTOR_M, DECODING_STRATEGY);
 
    // Printing PROCESSING_TIME_VECTOR_N_x_M.
-   simpleSchedulerDecoder.printProcessingTimesVector();
+   //simpleSchedulerDecoder.printProcessingTimesVector();
 
    // Printing COST_PER_UNIT_OF_TIME_VECTOR_M.
-   simpleSchedulerDecoder.printCostPerUnitOfTimeVector();
+   //simpleSchedulerDecoder.printCostPerUnitOfTimeVector();
 
    // Seed to the random number generator.
    const long unsigned RNG_SEED = 0;
@@ -300,18 +300,8 @@ int main() {
 
    printf("Objective value (Best Solution): %f.\n\n", algorithm.getBestFitness());
 
-   const std::vector<double> bestChromosome(algorithm.getBestChromosome());
-
-   /*
-   printf("|");
-   for (unsigned int i = 0; i < bestChromosome.size(); i++) {
-      printf(" %f |", bestChromosome[i]);
-   }
-   printf("\n");
-   */
-
-   // Printing best task scheduling plan.
-   simpleSchedulerDecoder.printTaskSchedulingPlan(bestChromosome);
+   // Printing best tasks scheduling's plan.
+   simpleSchedulerDecoder.printTaskSchedulingPlan();
 
    return 0;
 }
