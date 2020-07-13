@@ -41,44 +41,41 @@ int main() {
    // Processors amount.
    int M_PROCESSORS = 0;
 
-   // Creation of processingTimesVector.
-   std::vector< std::vector<int> > processingTimesVector;
+   // Creation of PROCESSING_TIME_VECTOR_N_x_M.
+   std::vector< std::vector<int> > PROCESSING_TIME_VECTOR_N_x_M;
 
-   // Creation of costPerUnitOfTimeVector.
-   std::vector<int> costPerUnitOfTimeVector;
+   // Creation of COST_PER_UNIT_OF_TIME_VECTOR_M.
+   std::vector<int> COST_PER_UNIT_OF_TIME_VECTOR_M;
 
    // Decoding strategy to be used by SimpleSchedulerDecoder.
    int DECODING_STRATEGY = 0;
 
-   // Size of chromosomes.
-   unsigned N = 0;
+   // Number of threads for parallel decoding.
+   unsigned MAX_THREADS_DECODING = 0;
 
    // Size of population.
    unsigned P = 0;
 
    // Fraction of population to be the elite-set.
-   double PE = 0;
+   double Pe = 0;
 
    // Fraction of population to be replaced by mutants.
-   double PM = 0;
+   double Pm = 0;
 
    // Probability that offspring inherit an allele from elite parent.
-   double RHOE = 0;
+   double RHOa = 0;
 
    // Number of independent populations.
-   unsigned K = 0;
+   unsigned PI = 0;
 
-   // Number of threads for parallel decoding.
-   unsigned MAXT = 0;
+   // Exchange best individuals at every Kp generations.
+   unsigned Kp = 0;
 
-   // Run for 1000 gens.
-   unsigned MAX_GENS = 0;
+   // Exchange top Km best.
+   unsigned Km = 0;
 
-   // Exchange best individuals at every 100 generations.
-   unsigned X_INTVL = 0;
-
-   // Exchange top 2 best.
-   unsigned X_NUMBER = 0;
+   // Stopping Criterion for Maximum Generations.
+   unsigned STOPPING_CRITERION_MAX_GENERATIONS = 0;
 
    // Loading BRKGA and Scheduler parameters:
 
@@ -158,10 +155,10 @@ int main() {
          // Setting M_PROCESSORS' value.
          M_PROCESSORS = atoi(parameterValue);
       } else if (strcmp(parameterName, "PROCESSING_TIME_VECTOR_N_x_M") == 0) {
-         // Initialization value for processingTimesVector.
+         // Initialization value for PROCESSING_TIME_VECTOR_N_x_M.
          int initializationValue = 0;
-         // Setting size of processingTimesVector.
-         processingTimesVector.resize(N_TASKS, std::vector<int>(M_PROCESSORS, initializationValue));
+         // Setting size of PROCESSING_TIME_VECTOR_N_x_M.
+         PROCESSING_TIME_VECTOR_N_x_M.resize(N_TASKS, std::vector<int>(M_PROCESSORS, initializationValue));
          // Converting char array to string.
          std::string text(parameterValue);
          // Splitting by vector's line.
@@ -178,15 +175,15 @@ int main() {
             // M Loop...
             for (unsigned int indexM = 0; indexM < vectorLineValues.size(); indexM++) {
                //printf("INDEX_N_M (%d_%d): %s\n", indexN, indexM, vectorLineValues[indexM].c_str());
-               // Filling processingTimesVector (line N, column M).
-               processingTimesVector[indexN][indexM] = atoi(vectorLineValues[indexM].c_str());
+               // Filling PROCESSING_TIME_VECTOR_N_x_M (line N, column M).
+               PROCESSING_TIME_VECTOR_N_x_M[indexN][indexM] = atoi(vectorLineValues[indexM].c_str());
             }
          }
       } else if (strcmp(parameterName, "COST_PER_UNIT_OF_TIME_VECTOR_M") == 0) {
-         // Initialization value for costPerUnitOfTimeVector.
+         // Initialization value for COST_PER_UNIT_OF_TIME_VECTOR_M.
          int initializationValue = 0;
-         // Setting size of costPerUnitOfTimeVector.
-         costPerUnitOfTimeVector.resize(M_PROCESSORS, initializationValue);
+         // Setting size of COST_PER_UNIT_OF_TIME_VECTOR_M.
+         COST_PER_UNIT_OF_TIME_VECTOR_M.resize(M_PROCESSORS, initializationValue);
          // Converting char array to string.
          std::string text(parameterValue);
          // Splitting by vector's line.
@@ -198,39 +195,39 @@ int main() {
             replaceAll(vectorLines[indexM], " ", "");
             replaceAll(vectorLines[indexM], "}", "");
             //printf("vectorLines[%d] = %s\n", indexM, vectorLines[indexM].c_str());
-            // Filling costPerUnitOfTimeVector (column).
-            costPerUnitOfTimeVector[indexM] = atoi(vectorLines[indexM].c_str());
+            // Filling COST_PER_UNIT_OF_TIME_VECTOR_M (column).
+            COST_PER_UNIT_OF_TIME_VECTOR_M[indexM] = atoi(vectorLines[indexM].c_str());
          }
       } else if (strcmp(parameterName, "DECODING_STRATEGY") == 0) {
          // Setting DECODING_STRATEGY's value.
          DECODING_STRATEGY = atoi(parameterValue);
+      } else if (strcmp(parameterName, "MAX_THREADS_DECODING") == 0) {
+         // Setting MAX_THREADS_DECODING's value.
+         MAX_THREADS_DECODING = atoi(parameterValue);
       } else if (strcmp(parameterName, "P") == 0) {
          // Setting P's value.
          P = atoi(parameterValue);
-      } else if (strcmp(parameterName, "PE") == 0) {
-         // Setting PE's value.
-         PE = atof(parameterValue);
-      } else if (strcmp(parameterName, "PM") == 0) {
-         // Setting PM's value.
-         PM = atof(parameterValue);
-      } else if (strcmp(parameterName, "RHOE") == 0) {
-         // Setting RHOE's value.
-         RHOE = atof(parameterValue);
-      } else if (strcmp(parameterName, "K") == 0) {
-         // Setting K's value.
-         K = atoi(parameterValue);
-      } else if (strcmp(parameterName, "MAXT") == 0) {
-         // Setting MAXT's value.
-         MAXT = atoi(parameterValue);
-      } else if (strcmp(parameterName, "MAX_GENS") == 0) {
-         // Setting MAX_GENS's value.
-         MAX_GENS = atoi(parameterValue);
-      } else if (strcmp(parameterName, "X_INTVL") == 0) {
-         // Setting X_INTVL's value.
-         X_INTVL = atoi(parameterValue);
-      } else if (strcmp(parameterName, "X_NUMBER") == 0) {
-         // Setting X_NUMBER's value.
-         X_NUMBER = atoi(parameterValue);
+      } else if (strcmp(parameterName, "Pe") == 0) {
+         // Setting Pe's value.
+         Pe = atof(parameterValue);
+      } else if (strcmp(parameterName, "Pm") == 0) {
+         // Setting Pm's value.
+         Pm = atof(parameterValue);
+      } else if (strcmp(parameterName, "RHOa") == 0) {
+         // Setting RHOa's value.
+         RHOa = atof(parameterValue);
+      } else if (strcmp(parameterName, "PI") == 0) {
+         // Setting PI's value.
+         PI = atoi(parameterValue);
+      } else if (strcmp(parameterName, "Kp") == 0) {
+         // Setting Kp's value.
+         Kp = atoi(parameterValue);
+      } else if (strcmp(parameterName, "Km") == 0) {
+         // Setting Km's value.
+         Km = atoi(parameterValue);
+      } else if (strcmp(parameterName, "STOPPING_CRITERION_MAX_GENERATIONS") == 0) {
+         // Setting STOPPING_CRITERION_MAX_GENERATIONS's value.
+         STOPPING_CRITERION_MAX_GENERATIONS = atoi(parameterValue);
       }
 
    }
@@ -241,20 +238,23 @@ int main() {
       free(lineContent);
    }
 
-   // Setting N's value (size of chromosome).
+   // Size n of chromosomes.
+   unsigned n = 0;
+
+   // Setting n's value (size of chromosome).
    if (DECODING_STRATEGY == 1) {
-      N = 2 * N_TASKS;
+      n = 2 * N_TASKS;
    } else {
-      N = N_TASKS;
+      n = N_TASKS;
    }
 
    // Initialize the SimpleSchedulerDecoder.
-   SimpleSchedulerDecoder simpleSchedulerDecoder(N_TASKS, M_PROCESSORS, processingTimesVector, costPerUnitOfTimeVector, DECODING_STRATEGY);
+   SimpleSchedulerDecoder simpleSchedulerDecoder(N_TASKS, M_PROCESSORS, PROCESSING_TIME_VECTOR_N_x_M, COST_PER_UNIT_OF_TIME_VECTOR_M, DECODING_STRATEGY);
 
-   // Printing processingTimesVector.
+   // Printing PROCESSING_TIME_VECTOR_N_x_M.
    simpleSchedulerDecoder.printProcessingTimesVector();
 
-   // Printing costPerUnitOfTimeVector.
+   // Printing COST_PER_UNIT_OF_TIME_VECTOR_M.
    simpleSchedulerDecoder.printCostPerUnitOfTimeVector();
 
    // Seed to the random number generator.
@@ -264,19 +264,19 @@ int main() {
    MTRand randomNumberGenerator(RNG_SEED);
 
    // Initialize the BRKGA-based heuristic.
-   BRKGA <SimpleSchedulerDecoder, MTRand> algorithm(N, P, PE, PM, RHOE, simpleSchedulerDecoder, randomNumberGenerator, K, MAXT);
+   BRKGA <SimpleSchedulerDecoder, MTRand> algorithm(n, P, Pe, Pm, RHOa, simpleSchedulerDecoder, randomNumberGenerator, PI, MAX_THREADS_DECODING);
 
    // Current generation.
    unsigned generation = 0;
 
-   printf("\nRunning for %d generations...\n\n", MAX_GENS);
+   printf("\nRunning for %d generations...\n\n", STOPPING_CRITERION_MAX_GENERATIONS);
 
-   while (generation < MAX_GENS) {
+   while (generation < STOPPING_CRITERION_MAX_GENERATIONS) {
       // Evolve the population for one generation.
       algorithm.evolve();
-      if ((++generation) % X_INTVL == 0) {
+      if ((++generation) % Kp == 0) {
          // Exchange top individuals.
-         algorithm.exchangeElite(X_NUMBER);
+         algorithm.exchangeElite(Km);
       }
    }
 
@@ -286,7 +286,7 @@ int main() {
    // Makes sure we have at least 10 individuals.
    const unsigned bound = std::min(P, unsigned(10));
 
-   for (unsigned i = 0; i < K; i++) {
+   for (unsigned i = 0; i < PI; i++) {
       printf("Population #%d:\n", i);
       for (unsigned j = 0; j < bound; j++) {
          printf("\t%d) %.7f\n", j, algorithm.getPopulation(i).getFitness(j));
